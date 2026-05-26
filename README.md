@@ -1,5 +1,7 @@
 # Bookophilic 🏛️
 
+**Live Project:** [https://bookophilic.vercel.app/](https://bookophilic.vercel.app/)
+
 **Bookophilic** is a premium, AI-driven reading companion and study room designed to optimize learning retention and book annotations. Built on a relaxing Cosmic Sapphire/Ocean Blue dark theme, it replaces generic gamified streak counters with dedicated academic and professional workflows.
 
 ---
