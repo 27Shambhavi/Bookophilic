@@ -23,7 +23,12 @@ export default function Login() {
       navigate('/');
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.detail || 'Invalid email or password combination.');
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        setError(detail.map(e => e.msg).join(', '));
+      } else {
+        setError(detail || 'Invalid email or password combination.');
+      }
     } finally {
       setLoading(false);
     }

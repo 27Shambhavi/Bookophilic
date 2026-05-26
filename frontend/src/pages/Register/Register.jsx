@@ -26,7 +26,12 @@ export default function Register() {
       navigate('/');
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.detail || 'Registration failed. Try checking your parameters.');
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        setError(detail.map(e => e.msg).join(', '));
+      } else {
+        setError(detail || 'Registration failed. Try checking your parameters.');
+      }
     } finally {
       setLoading(false);
     }
