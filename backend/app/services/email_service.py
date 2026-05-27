@@ -64,10 +64,10 @@ class EmailService:
 
             port = int(smtp_port) if smtp_port else 587
             if port == 465:
-                server = smtplib.SMTP_SSL(smtp_server, port)
+                server = smtplib.SMTP_SSL(smtp_server, port, timeout=10.0)
                 server.login(smtp_username, smtp_password)
             else:
-                server = smtplib.SMTP(smtp_server, port)
+                server = smtplib.SMTP(smtp_server, port, timeout=10.0)
                 server.starttls()
                 server.login(smtp_username, smtp_password)
             
