@@ -139,28 +139,51 @@ def verify_otp(req: VerifyOTPRequest, db: Session = Depends(get_db)):
 
 @router.post("/reset-password")
 def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
-    payload = AuthService.decode_access_token(req.reset_token)
-    if not payload or payload.get("type") != "password_reset":
+    try:
+        print(f"Resetting password with token: {req.reset_token[:15]}...")
+        payload = AuthService.decode_access_token(req.reset_token)
+        if not payload:
+            print("Failed to decode token or token expired.")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired reset token"
+            )
+            
+        if payload.get("type") != "password_reset":
+            print(f"Invalid token type: {payload.get('type')}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token type for password reset"
+            )
+        
+        email = payload.get("sub")
+        print(f"Decoded email: {email}")
+        user = db.query(User).filter(User.email == email.strip().lower()).first()
+        if not user:
+            print(f"User with email {email} not found in database.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Update password and clear OTP fields
+        user.hashed_password = AuthService.get_password_hash(req.new_password)
+        user.otp_code = None
+        user.otp_expiry = None
+        db.commit()
+        print("Password updated successfully in database.")
+        
+        return {"message": "Password reset successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        print("ERROR IN RESET PASSWORD:")
+        traceback.print_exc()
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired reset token"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal error during password reset: {e}"
         )
-    
-    email = payload.get("sub")
-    user = db.query(User).filter(User.email == email.strip().lower()).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    # Update password and clear OTP fields
-    user.hashed_password = AuthService.get_password_hash(req.new_password)
-    user.otp_code = None
-    user.otp_expiry = None
-    db.commit()
-    
-    return {"message": "Password reset successfully"}
 
 @router.put("/change-password")
 def change_password(
