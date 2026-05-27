@@ -147,7 +147,7 @@ def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
         )
     
     email = payload.get("sub")
-    user = db.query(User).filter(func.lower(User.email) == func.lower(email.strip())).first()
+    user = db.query(User).filter(User.email == email.strip().lower()).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
