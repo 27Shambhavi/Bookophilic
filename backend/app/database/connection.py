@@ -37,9 +37,17 @@ try:
         print("Connected to database successfully.")
 except Exception as e:
     print(f"Warning: Could not connect to database at '{settings.DATABASE_URL}': {e}")
-    print("Falling back to local SQLite database: sqlite:///bookophilic.db")
+    import os
+    sqlite_url = "sqlite:///bookophilic.db"
+    # If running on Render with a persistent disk mounted at /data
+    if os.path.exists("/data") and os.path.isdir("/data"):
+        sqlite_url = "sqlite:////data/bookophilic.db"
+        print("Falling back to persistent SQLite database on Render disk: sqlite:////data/bookophilic.db")
+    else:
+        print("Falling back to local SQLite database: sqlite:///bookophilic.db")
+        
     engine = create_engine(
-        "sqlite:///bookophilic.db",
+        sqlite_url,
         connect_args={"check_same_thread": False}
     )
 

@@ -37,6 +37,7 @@ export default function BookDetails() {
   
   const [generateText, setGenerateText] = useState('');
   const [cardsLoading, setCardsLoading] = useState(false);
+  const [flashcardCount, setFlashcardCount] = useState(4);
 
   // Reading Tracker state
   const [activeSession, setActiveSession] = useState(null);
@@ -333,7 +334,7 @@ export default function BookDetails() {
 
     setCardsLoading(true);
     try {
-      const cards = await aiService.generateFlashcards(bookId, generateText, 4);
+      const cards = await aiService.generateFlashcards(bookId, generateText, flashcardCount);
       setFlashcards([...cards, ...flashcards]);
       setGenerateText('');
       alert(`Successfully generated ${cards.length} AI study flashcards!`);
@@ -946,21 +947,32 @@ export default function BookDetails() {
                         value={generateText}
                         onChange={(e) => setGenerateText(e.target.value)}
                       />
-                      <button
-                        type="submit"
-                        disabled={cardsLoading || !generateText.trim()}
-                        className="w-full py-2.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 disabled:opacity-50 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-glass-glow transition-all cursor-pointer"
-                      >
-                        {cardsLoading ? (
-                          <>
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Structuring cards...
-                          </>
-                        ) : (
-                          <>
-                            <Brain className="w-3.5 h-3.5" /> Generate 4 Flashcards
-                          </>
-                        )}
-                      </button>
+                      <div className="flex gap-2">
+                        <select
+                          className="bg-slate-900 border border-white/5 focus:border-primary-500 rounded-xl px-2.5 py-2.5 text-xs text-slate-100 focus:outline-none"
+                          value={flashcardCount}
+                          onChange={(e) => setFlashcardCount(parseInt(e.target.value))}
+                        >
+                          {[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                            <option key={n} value={n}>{n} Cards</option>
+                          ))}
+                        </select>
+                        <button
+                          type="submit"
+                          disabled={cardsLoading || !generateText.trim()}
+                          className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 disabled:opacity-50 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-glass-glow transition-all cursor-pointer"
+                        >
+                          {cardsLoading ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Structuring...
+                            </>
+                          ) : (
+                            <>
+                              <Brain className="w-3.5 h-3.5" /> Generate
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </form>
                   </>
                 )}

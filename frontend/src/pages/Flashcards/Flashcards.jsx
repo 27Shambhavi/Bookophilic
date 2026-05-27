@@ -18,6 +18,7 @@ export default function Flashcards() {
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [seedCount, setSeedCount] = useState(3);
 
   const loadFlashcards = async () => {
     try {
@@ -127,7 +128,7 @@ export default function Flashcards() {
       }
 
       // 2. Call AI generate endpoint using the text content
-      await aiService.generateFlashcards(bookId, textContent, 3);
+      await aiService.generateFlashcards(bookId, textContent, seedCount);
 
       alert("Successfully generated NLP/AI study flashcards based on your library context!");
       // Reload flashcards
@@ -256,12 +257,23 @@ export default function Flashcards() {
                 </div>
 
                 <div className="flex flex-col gap-2 pt-2">
-                  <button 
-                    onClick={handleQuickSeed}
-                    className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-glass-glow transition-all flex items-center justify-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" /> Quick Seed: Generate 3 Study Cards
-                  </button>
+                  <div className="flex gap-2">
+                    <select
+                      className="bg-slate-900 border border-white/5 focus:border-emerald-500 rounded-xl px-2.5 py-2.5 text-xs text-slate-100 focus:outline-none"
+                      value={seedCount}
+                      onChange={(e) => setSeedCount(parseInt(e.target.value))}
+                    >
+                      {[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                        <option key={n} value={n}>{n} Cards</option>
+                      ))}
+                    </select>
+                    <button 
+                      onClick={handleQuickSeed}
+                      className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-glass-glow transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4" /> Quick Seed
+                    </button>
+                  </div>
                   <button 
                     onClick={() => navigate('/')}
                     className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 border border-white/5 font-semibold text-sm transition-all"

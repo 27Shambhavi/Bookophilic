@@ -314,6 +314,7 @@ export default function Login() {
                       setModalStep(1);
                       setModalError('');
                       setModalSuccess('');
+                      setForgotEmail(email);
                     }}
                     className="text-xs text-violet-400 hover:text-violet-300 font-bold hover:underline cursor-pointer"
                   >
