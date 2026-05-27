@@ -106,11 +106,12 @@ def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
     user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
     db.commit()
 
-    email_sent = EmailService.send_otp_email(user.email, otp)
+    email_sent, smtp_error = EmailService.send_otp_email(user.email, otp)
     if not email_sent:
         return {
             "message": "OTP code generated successfully (fallback: SMTP server is not connected/failed).",
-            "otp_fallback": otp
+            "otp_fallback": otp,
+            "smtp_error": smtp_error
         }
     return {"message": "OTP code sent successfully to email"}
 

@@ -6,7 +6,7 @@ from email.mime.multipart import MIMEMultipart
 
 class EmailService:
     @staticmethod
-    def send_otp_email(to_email: str, otp_code: str) -> bool:
+    def send_otp_email(to_email: str, otp_code: str) -> tuple[bool, str]:
         smtp_server = os.getenv("SMTP_SERVER", "")
         smtp_port = os.getenv("SMTP_PORT", "")
         smtp_username = os.getenv("SMTP_USERNAME", "")
@@ -52,8 +52,9 @@ class EmailService:
         print("="*50 + "\n")
 
         if not smtp_server or not smtp_username or not smtp_password:
-            print("Warning: SMTP settings not configured in environment. OTP has been logged to console above.")
-            return False
+            err_msg = "SMTP settings not configured in environment (SMTP_SERVER, SMTP_USERNAME, or SMTP_PASSWORD is empty)."
+            print(f"Warning: {err_msg}")
+            return False, err_msg
 
         try:
             msg = MIMEMultipart()
@@ -74,8 +75,8 @@ class EmailService:
             server.sendmail(smtp_from, to_email, msg.as_string())
             server.close()
             print("Email sent successfully via SMTP.")
-            return True
+            return True, ""
         except Exception as e:
-            print(f"Error sending email via SMTP: {e}")
-            print("Make sure your SMTP credentials are correct.")
-            return False
+            err_msg = str(e)
+            print(f"Error sending email via SMTP: {err_msg}")
+            return False, err_msg
