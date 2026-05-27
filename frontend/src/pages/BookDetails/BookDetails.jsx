@@ -585,7 +585,7 @@ export default function BookDetails() {
             {/* Left Column: Tabbed Panels */}
             <div className="lg:col-span-2 space-y-6">
               {/* Tab Navigation */}
-              <div className="flex border-b border-white/10 gap-6">
+              <div className="flex flex-wrap border-b border-white/10 gap-x-6 gap-y-2">
                 <button
                   onClick={() => setActiveTab('notes')}
                   className={`pb-3.5 text-sm font-bold transition-all relative flex items-center gap-2 cursor-pointer ${

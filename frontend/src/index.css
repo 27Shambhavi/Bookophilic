@@ -281,3 +281,112 @@ html.light .bg-slate-900\/40 {
   background-color: rgba(241, 245, 249, 0.4) !important;
 }
 
+/* --- Kinnectric Styling & Glow Accents --- */
+
+.bg-gradient-kinnectric {
+  background: linear-gradient(135deg, #7c3aed 0%, #ec4899 50%, #ef4444 100%);
+}
+
+.text-gradient-kinnectric {
+  background: linear-gradient(135deg, #c084fc 0%, #f472b6 50%, #f87171 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.shadow-kinnectric-glow {
+  box-shadow: 0 0 25px rgba(236, 72, 153, 0.35);
+}
+
+.shadow-kinnectric-glow-lg {
+  box-shadow: 0 0 40px rgba(124, 58, 237, 0.5);
+}
+
+/* Background Glow Orbs */
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+.glow-orb-indigo {
+  width: 400px;
+  height: 400px;
+  background: rgba(99, 102, 241, 0.25);
+  top: 10%;
+  left: 20%;
+}
+
+.glow-orb-violet {
+  width: 450px;
+  height: 450px;
+  background: rgba(139, 92, 246, 0.2);
+  bottom: 10%;
+  right: 15%;
+}
+
+/* Responsive navigation transitions */
+.mobile-nav-enter {
+  transform: translateX(-100%);
+}
+
+.mobile-nav-enter-active {
+  transform: translateX(0);
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mobile-nav-exit {
+  transform: translateX(0);
+}
+
+.mobile-nav-exit-active {
+  transform: translateX(-100%);
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Splash Screen Animations */
+@keyframes fadeInSimple {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOutSimple {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.animate-fade-in-slow {
+  animation: fadeInSimple 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in-delayed-1 {
+  opacity: 0;
+  animation: fadeInSimple 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+}
+
+.animate-fade-in-delayed-2 {
+  opacity: 0;
+  animation: fadeInSimple 1s cubic-bezier(0.16, 1, 0.3, 1) 1.5s forwards;
+}
+
+.animate-fade-out-slow {
+  animation: fadeOutSimple 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Smartphone Mockup CSS */
+.phone-frame-container {
+  perspective: 1200px;
+}
+
+.phone-frame-3d {
+  transform: rotateY(-15deg) rotateX(10deg);
+  transition: transform 0.5s ease-out;
+}
+
+.phone-frame-3d:hover {
+  transform: rotateY(-5deg) rotateX(5deg) scale(1.02);
+}
+
+
