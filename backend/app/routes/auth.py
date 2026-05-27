@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database.connection import get_db
 from app.schemas.user_schema import (
     UserCreate, UserResponse, Token, UserPreferenceUpdate, UserPreferenceResponse,
-    ForgotPasswordRequest, VerifyOTPRequest, ResetPasswordRequest
+    ForgotPasswordRequest, VerifyOTPRequest, ResetPasswordRequest, ChangePasswordRequest
 )
 from app.models.user_model import User, UserPreference
 from app.services.auth_service import AuthService
@@ -18,7 +19,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
     # Check if user already exists
-    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    existing_user = db.query(User).filter(func.lower(User.email) == func.lower(user_data.email.strip())).first()
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -27,7 +28,7 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
         
     hashed_pw = AuthService.get_password_hash(user_data.password)
     db_user = User(
-        email=user_data.email,
+        email=user_data.email.strip().lower(),
         hashed_password=hashed_pw,
         full_name=user_data.full_name
     )
@@ -40,7 +41,8 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
         user_id=db_user.id,
         preferred_genres="",
         theme="dark",
-        reading_goal_pages=50
+        reading_goal_pages=50,
+        avatar=""
     )
     db.add(prefs)
     db.commit()
@@ -50,7 +52,7 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == form_data.username).first()
+    user = db.query(User).filter(func.lower(User.email) == func.lower(form_data.username.strip())).first()
     if not user or not AuthService.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -82,6 +84,8 @@ def update_preferences(
         prefs.theme = pref_data.theme
     if pref_data.reading_goal_pages is not None:
         prefs.reading_goal_pages = pref_data.reading_goal_pages
+    if pref_data.avatar is not None:
+        prefs.avatar = pref_data.avatar
         
     db.commit()
     db.refresh(prefs)
@@ -89,7 +93,7 @@ def update_preferences(
 
 @router.post("/forgot-password")
 def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == req.email).first()
+    user = db.query(User).filter(func.lower(User.email) == func.lower(req.email.strip())).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -106,7 +110,7 @@ def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
 @router.post("/verify-otp")
 def verify_otp(req: VerifyOTPRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == req.email).first()
+    user = db.query(User).filter(func.lower(User.email) == func.lower(req.email.strip())).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -142,7 +146,7 @@ def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
         )
     
     email = payload.get("sub")
-    user = db.query(User).filter(User.email == email).first()
+    user = db.query(User).filter(func.lower(User.email) == func.lower(email.strip())).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -156,3 +160,19 @@ def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
     db.commit()
     
     return {"message": "Password reset successfully"}
+
+@router.put("/change-password")
+def change_password(
+    req: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if not AuthService.verify_password(req.old_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect old password"
+        )
+    
+    current_user.hashed_password = AuthService.get_password_hash(req.new_password)
+    db.commit()
+    return {"message": "Password updated successfully"}

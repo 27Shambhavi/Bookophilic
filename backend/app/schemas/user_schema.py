@@ -6,6 +6,7 @@ class UserPreferenceBase(BaseModel):
     preferred_genres: Optional[str] = None
     theme: Optional[str] = "dark"
     reading_goal_pages: Optional[int] = 50
+    avatar: Optional[str] = None
 
 class UserPreferenceUpdate(UserPreferenceBase):
     pass
@@ -53,4 +54,8 @@ class VerifyOTPRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     reset_token: str
+    new_password: str = Field(..., min_length=6)
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str
     new_password: str = Field(..., min_length=6)

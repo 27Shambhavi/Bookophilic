@@ -103,7 +103,11 @@ export default function Navbar() {
                 to="/profile" 
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-white/5 transition-all text-slate-300 hover:text-white hidden md:flex"
               >
-                <User className="w-4 h-4 text-primary-400" />
+                {currentUser.preferences?.avatar ? (
+                  <span className="text-base select-none shrink-0" style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.2))' }}>{currentUser.preferences.avatar}</span>
+                ) : (
+                  <User className="w-4 h-4 text-primary-400 shrink-0" />
+                )}
                 <span className="text-sm font-medium">Profile</span>
               </Link>
               <button 
@@ -185,9 +189,14 @@ export default function Navbar() {
             {/* Drawer Footer / Account details */}
             {currentUser && (
               <div className="border-t border-white/5 pt-4 space-y-3">
-                <div className="px-2">
-                  <span className="block text-[10px] text-slate-500 uppercase tracking-wider font-bold">Logged in as</span>
-                  <span className="block text-xs text-slate-300 font-bold truncate mt-0.5">{currentUser.full_name || currentUser.email}</span>
+                <div className="px-2 flex items-center gap-2.5">
+                  {currentUser.preferences?.avatar && (
+                    <span className="text-2xl p-1.5 bg-white/5 rounded-xl border border-white/5 flex items-center justify-center shrink-0 w-9 h-9 select-none">{currentUser.preferences.avatar}</span>
+                  )}
+                  <div className="overflow-hidden">
+                    <span className="block text-[10px] text-slate-500 uppercase tracking-wider font-bold">Logged in as</span>
+                    <span className="block text-xs text-slate-300 font-bold truncate mt-0.5">{currentUser.full_name || currentUser.email}</span>
+                  </div>
                 </div>
                 <button
                   onClick={() => {

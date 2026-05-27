@@ -22,7 +22,8 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if email is None:
         raise credentials_exception
         
-    user = db.query(User).filter(User.email == email).first()
+    from sqlalchemy import func
+    user = db.query(User).filter(func.lower(User.email) == func.lower(email.strip())).first()
     if user is None:
         raise credentials_exception
         

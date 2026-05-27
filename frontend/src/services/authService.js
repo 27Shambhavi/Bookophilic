@@ -4,8 +4,9 @@ const API_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' &
 
 const authService = {
   async register(email, password, fullName) {
+    const cleanEmail = email.trim().toLowerCase();
     const response = await axios.post(`${API_URL}/auth/register`, {
-      email,
+      email: cleanEmail,
       password,
       full_name: fullName,
     });
@@ -13,8 +14,9 @@ const authService = {
   },
 
   async login(email, password) {
+    const cleanEmail = email.trim().toLowerCase();
     const formData = new FormData();
-    formData.append('username', email);
+    formData.append('username', cleanEmail);
     formData.append('password', password);
 
     const response = await axios.post(`${API_URL}/auth/login`, formData, {
@@ -50,8 +52,6 @@ const authService = {
   },
 
   async getPreferences() {
-    // Actually getPreferences is retrieved from user details or put preferences
-    // For this endpoint we can request me
     const me = await this.getMe();
     return me.preferences;
   },
@@ -64,12 +64,14 @@ const authService = {
   },
 
   async forgotPassword(email) {
-    const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
+    const cleanEmail = email.trim().toLowerCase();
+    const response = await axios.post(`${API_URL}/auth/forgot-password`, { email: cleanEmail });
     return response.data;
   },
 
   async verifyOtp(email, otp) {
-    const response = await axios.post(`${API_URL}/auth/verify-otp`, { email, otp });
+    const cleanEmail = email.trim().toLowerCase();
+    const response = await axios.post(`${API_URL}/auth/verify-otp`, { email: cleanEmail, otp });
     return response.data;
   },
 
@@ -77,6 +79,23 @@ const authService = {
     const response = await axios.post(`${API_URL}/auth/reset-password`, {
       reset_token: resetToken,
       new_password: newPassword,
+    });
+    return response.data;
+  },
+
+  async changePassword(oldPassword, newPassword) {
+    const response = await axios.put(`${API_URL}/auth/change-password`, {
+      old_password: oldPassword,
+      new_password: newPassword,
+    }, {
+      headers: this.getAuthHeaders(),
+    });
+    return response.data;
+  },
+
+  async getReadingSessions() {
+    const response = await axios.get(`${API_URL}/ai/sessions`, {
+      headers: this.getAuthHeaders(),
     });
     return response.data;
   },

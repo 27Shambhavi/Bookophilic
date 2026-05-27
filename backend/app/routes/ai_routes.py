@@ -86,6 +86,26 @@ def end_reading_session(
         "notes_taken": session.notes_taken
     }}
 
+@router.get("/sessions")
+def get_reading_sessions(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    sessions = analytics_service.get_user_sessions(db, current_user.id)
+    return [
+        {
+            "id": s.id,
+            "book_id": s.book_id,
+            "book_title": s.book.title if s.book else "Unknown Book",
+            "start_time": s.start_time,
+            "end_time": s.end_time,
+            "pages_read": s.pages_read,
+            "notes_taken": s.notes_taken,
+            "duration_minutes": round((s.end_time - s.start_time).total_seconds() / 60.0) if (s.end_time and s.start_time) else None
+        }
+        for s in sessions
+    ]
+
 class RagQueryRequest(BaseModel):
     query: str
 

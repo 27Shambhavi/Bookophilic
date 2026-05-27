@@ -39,6 +39,13 @@ try:
         print("Column otp_expiry added to users table successfully.")
     except Exception:
         pass
+
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE user_preferences ADD COLUMN avatar VARCHAR(255) DEFAULT NULL"))
+        print("Column avatar added to user_preferences table successfully.")
+    except Exception:
+        pass
     
     # Auto-seed main genres
     from app.database.connection import SessionLocal
