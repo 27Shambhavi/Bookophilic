@@ -31,8 +31,15 @@ class UserPreferenceResponse(UserPreferenceBase):
     class Config:
         from_attributes = True
 
-class UserBase(BaseModel):
+class EmailBaseModel(BaseModel):
     email: EmailStr
+
+    @field_validator('email')
+    @classmethod
+    def normalize_email(cls, v):
+        return v.strip().lower()
+
+class UserBase(EmailBaseModel):
     full_name: Optional[str] = None
 
 class UserCreate(UserBase):
@@ -62,11 +69,10 @@ class UserResponse(UserBase):
     class Config:
         from_attributes = True
 
-class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
+class ForgotPasswordRequest(EmailBaseModel):
+    pass
 
-class VerifyOTPRequest(BaseModel):
-    email: EmailStr
+class VerifyOTPRequest(EmailBaseModel):
     otp: str
 
 class ResetPasswordRequest(BaseModel):
