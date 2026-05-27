@@ -67,12 +67,12 @@ export default function Register() {
             </span>
             <h1 className="text-5xl font-extrabold text-white tracking-tight leading-tight">
               Turn your reading into <br />
-              <span className="text-transparent bg-clip-text bg-gradient-kinnectric drop-shadow-[0_2px_15px_rgba(236,72,153,0.3)]">
+              <span className="text-gradient-kinnectric drop-shadow-[0_2px_15px_rgba(236,72,153,0.3)]">
                 lasting wisdom
               </span>.
             </h1>
             <p className="text-slate-400 text-xl font-medium tracking-wide">
-              “Read. Reflect. Remember.”
+              Your AI-powered space for thoughts, quotes, and learnings
             </p>
           </div>
 
@@ -175,8 +175,8 @@ export default function Register() {
             Turn your reading <br />
             into lasting wisdom
           </h1>
-          <p className="text-slate-400 text-sm italic">
-            “Read. Reflect. Remember.”
+          <p className="text-slate-400 text-sm">
+            Your AI-powered space for thoughts, quotes, and learnings
           </p>
         </div>
 
@@ -191,7 +191,7 @@ export default function Register() {
                 Create Account
               </h2>
               <p className="text-slate-500 text-xs">
-                Build your AI-powered reading study room
+                Your AI-powered space for thoughts, quotes, and learnings
               </p>
             </div>
 

@@ -58,6 +58,23 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
+    // Silent warm-up request to trigger Render spin-up immediately on app load
+    const warmUpBackend = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || 
+          (typeof window !== 'undefined' && 
+          (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+            ? 'http://localhost:8000/api' 
+            : 'https://bookophilic.onrender.com/api');
+        
+        // Pinging the authentication endpoint to wake up Render server
+        await fetch(`${API_URL}/auth/me`).catch(() => {});
+      } catch (err) {
+        // Silent catch
+      }
+    };
+    warmUpBackend();
+
     const timer = setTimeout(() => {
       setShowSplash(false);
     }, 3200); // Unmount splash screen after 3.2s
