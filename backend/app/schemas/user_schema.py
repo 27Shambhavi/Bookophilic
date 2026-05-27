@@ -1,6 +1,18 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, List
 from datetime import datetime
+import re
+
+def validate_password_strength(v: str) -> str:
+    if len(v) < 6:
+        raise ValueError("Password must be at least 6 characters long")
+    if not re.search(r"[A-Za-z]", v):
+        raise ValueError("Password must contain at least one alphabetic letter")
+    if not re.search(r"\d", v):
+        raise ValueError("Password must contain at least one numeric digit")
+    if not re.search(r"[@$!%*?&#_+-]", v):
+        raise ValueError("Password must contain at least one special character (e.g. @$!%*?&#_+-)")
+    return v
 
 class UserPreferenceBase(BaseModel):
     preferred_genres: Optional[str] = None
@@ -25,6 +37,11 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=6)
+
+    @field_validator('password')
+    @classmethod
+    def check_password_strength(cls, v):
+        return validate_password_strength(v)
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -56,6 +73,16 @@ class ResetPasswordRequest(BaseModel):
     reset_token: str
     new_password: str = Field(..., min_length=6)
 
+    @field_validator('new_password')
+    @classmethod
+    def check_new_password_strength(cls, v):
+        return validate_password_strength(v)
+
 class ChangePasswordRequest(BaseModel):
     old_password: str
     new_password: str = Field(..., min_length=6)
+
+    @field_validator('new_password')
+    @classmethod
+    def check_new_password_strength(cls, v):
+        return validate_password_strength(v)

@@ -110,7 +110,19 @@ export default function Profile() {
       return;
     }
     if (newPassword.length < 6) {
-      setPasswordError('New password must be at least 6 characters.');
+      setPasswordError('New password must be at least 6 characters long.');
+      return;
+    }
+    if (!/[A-Za-z]/.test(newPassword)) {
+      setPasswordError('New password must contain at least one letter.');
+      return;
+    }
+    if (!/\d/.test(newPassword)) {
+      setPasswordError('New password must contain at least one number.');
+      return;
+    }
+    if (!/[@$!%*?&#_+-]/.test(newPassword)) {
+      setPasswordError('New password must contain at least one special character (e.g. @$!%*?&#_+-).');
       return;
     }
     if (newPassword !== confirmPassword) {

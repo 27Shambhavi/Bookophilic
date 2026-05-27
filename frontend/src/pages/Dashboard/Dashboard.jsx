@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [books, setBooks] = useState([]);
   const [selectedMentor, setSelectedMentor] = useState(mentorService.getMentor());
+  const [customMentorInput, setCustomMentorInput] = useState('');
 
   const handleMentorChange = (m) => {
     mentorService.setMentor(m);
@@ -147,18 +148,20 @@ export default function Dashboard() {
                 <div className="space-y-8">
                   {/* Thinkers Selector */}
                   <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-4">
-                    <h3 className="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <h3 className="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2 select-none">
                       <User className="w-5 h-5 text-primary-400" /> Great Thinkers & Philosophers
                     </h3>
-                    <p className="text-xs text-slate-400">
-                      Select a great thinker to steer wisdom quotes, positive reflections, and debates.
+                    <p className="text-xs text-slate-400 select-none">
+                      Select a popular thinker or search for any custom philosopher to steer quotes, positive reflections, and debates.
                     </p>
+                    
+                    {/* Preset Grid */}
                     <div className="grid grid-cols-2 gap-2">
                       {mentorService.getMentors().map(m => (
                         <button
                           key={m.key}
                           onClick={() => handleMentorChange(m.key)}
-                          className={`p-2.5 rounded-xl border text-left transition-all duration-300 ${
+                          className={`p-2.5 rounded-xl border text-left transition-all duration-300 cursor-pointer ${
                             selectedMentor === m.key
                               ? 'bg-primary-500/10 border-primary-500 text-white shadow-[0_0_12px_rgba(37,99,235,0.25)]'
                               : 'bg-slate-900/40 border-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/5'
@@ -169,6 +172,46 @@ export default function Dashboard() {
                         </button>
                       ))}
                     </div>
+
+                    {/* Custom Thinker Steer Form */}
+                    <form 
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (customMentorInput.trim()) {
+                          handleMentorChange(customMentorInput.trim());
+                          setCustomMentorInput('');
+                        }
+                      }}
+                      className="flex gap-2 pt-2 border-t border-white/5"
+                    >
+                      <input
+                        type="text"
+                        placeholder="Search/Type any thinker (e.g. Seneca)..."
+                        className="flex-1 bg-slate-900 border border-white/5 focus:border-primary-500 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition-all"
+                        value={customMentorInput}
+                        onChange={(e) => setCustomMentorInput(e.target.value)}
+                      />
+                      <button
+                        type="submit"
+                        className="px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer select-none"
+                      >
+                        Steer
+                      </button>
+                    </form>
+
+                    {/* Active steered indicator if custom */}
+                    {!['Socrates', 'Steve Jobs', 'Albert Einstein', 'Marcus Aurelius'].includes(selectedMentor) && (
+                      <div className="flex justify-between items-center bg-violet-500/10 border border-violet-500/20 px-3 py-2.5 rounded-xl text-xs text-violet-400 font-bold animate-fadeIn">
+                        <span>Currently Steered: {selectedMentor}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleMentorChange('Socrates')}
+                          className="text-[10px] text-violet-300 hover:underline font-extrabold cursor-pointer border-none bg-transparent"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Reading Challenges Widget */}

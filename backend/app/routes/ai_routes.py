@@ -44,10 +44,11 @@ def classify_theme(req: ThemeRequest):
 
 @router.get("/insights")
 def get_insights(
+    mentor: str = "Socrates",
     current_user: User = Depends(get_current_user), 
     db: Session = Depends(get_db)
 ):
-    insights = analytics_service.get_ai_coaching_insights(db, current_user.id)
+    insights = analytics_service.get_ai_coaching_insights(db, current_user.id, mentor=mentor)
     return {"insights": insights}
 
 # Reading Session Tracker APIs (which belong to Analytics/AI category)

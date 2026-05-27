@@ -89,8 +89,9 @@ const aiService = {
     return response.data;
   },
 
-  async getReadingCoachingInsights() {
+  async getReadingCoachingInsights(mentor = 'Socrates') {
     const response = await axios.get(`${API_URL}/ai/insights`, {
+      params: { mentor },
       headers: authService.getAuthHeaders(),
     });
     return response.data; // returns { insights: "..." }

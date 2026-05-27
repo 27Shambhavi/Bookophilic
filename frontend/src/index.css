@@ -284,10 +284,16 @@ html.light .bg-slate-900\/40 {
 /* Dynamic Brand Name Gradient */
 .brand-name-gradient {
   background-image: linear-gradient(to right, #ffffff, #e2e8f0, #93c5fd) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
 }
 
 html.light .brand-name-gradient {
   background-image: linear-gradient(to right, #0f172a, #334155, #2563eb) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
 }
 
 /* Light text color overrides for Light Mode */
@@ -305,6 +311,7 @@ html.light .border-white\/30 { border-color: rgba(0, 0, 0, 0.15) !important; }
 
 /* Light Mode transparent background overrides */
 html.light .bg-white\/10 { background-color: rgba(0, 0, 0, 0.06) !important; }
+html.light .bg-slate-950\/40 { background-color: rgba(248, 250, 252, 0.4) !important; }
 html.light .bg-slate-950\/60 { background-color: rgba(248, 250, 252, 0.6) !important; }
 html.light .bg-slate-950\/95 { background-color: rgba(248, 250, 252, 0.95) !important; }
 html.light .bg-slate-900\/60 { background-color: rgba(241, 245, 249, 0.6) !important; }

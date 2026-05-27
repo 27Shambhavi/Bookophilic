@@ -20,6 +20,24 @@ export default function Register() {
     e.preventDefault();
     if (!fullName || !email || !password) return;
 
+    // Password validation constraints (alpha, numerical, special tag)
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+    if (!/[A-Za-z]/.test(password)) {
+      setError('Password must contain at least one letter.');
+      return;
+    }
+    if (!/\d/.test(password)) {
+      setError('Password must contain at least one number.');
+      return;
+    }
+    if (!/[@$!%*?&#_+-]/.test(password)) {
+      setError('Password must contain at least one special character (e.g. @$!%*?&#_+-).');
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {

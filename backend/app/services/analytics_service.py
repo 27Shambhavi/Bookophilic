@@ -69,7 +69,7 @@ class AnalyticsService:
     def get_user_sessions(self, db: Session, user_id: int):
         return db.query(ReadingTracker).filter(ReadingTracker.user_id == user_id).order_by(ReadingTracker.created_at.desc()).all()
 
-    def get_ai_coaching_insights(self, db: Session, user_id: int) -> str:
+    def get_ai_coaching_insights(self, db: Session, user_id: int, mentor: str = "Socrates") -> str:
         sessions = self.get_user_sessions(db, user_id)
         user = db.query(User).filter(User.id == user_id).first()
         user_name = user.full_name if user else "Reader"
@@ -94,4 +94,4 @@ class AnalyticsService:
                 "minutes": minutes
             })
             
-        return self.agent.generate_reading_insights(logs, user_name)
+        return self.agent.generate_reading_insights(logs, user_name, mentor)

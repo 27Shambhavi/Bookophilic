@@ -47,19 +47,28 @@ const mentorService = {
 
   getMentor() {
     const saved = localStorage.getItem('active_mentor');
-    return saved && THINKER_CONFIGS[saved] ? saved : 'Socrates';
+    return saved ? saved : 'Socrates';
   },
 
   setMentor(mentorName) {
-    if (THINKER_CONFIGS[mentorName]) {
-      localStorage.setItem('active_mentor', mentorName);
+    if (mentorName && mentorName.trim()) {
+      localStorage.setItem('active_mentor', mentorName.trim());
       window.dispatchEvent(new Event('mentor_changed'));
     }
   },
 
   getMentorConfig(mentorName = null) {
     const active = mentorName || this.getMentor();
-    return THINKER_CONFIGS[active] || THINKER_CONFIGS['Socrates'];
+    if (THINKER_CONFIGS[active]) {
+      return THINKER_CONFIGS[active];
+    }
+    return {
+      name: active,
+      title: "Steered Thinker",
+      description: `Steering AI responses and quotes using the philosophy of ${active}.`,
+      signature: `— ${active}`,
+      style: "stoic"
+    };
   },
 
   adaptText(text, mentorName = null) {

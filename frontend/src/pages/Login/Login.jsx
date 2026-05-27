@@ -68,7 +68,19 @@ export default function Login() {
     e.preventDefault();
     if (!newPassword || !confirmPassword) return;
     if (newPassword.length < 6) {
-      setModalError('Password must be at least 6 characters.');
+      setModalError('Password must be at least 6 characters long.');
+      return;
+    }
+    if (!/[A-Za-z]/.test(newPassword)) {
+      setModalError('Password must contain at least one letter.');
+      return;
+    }
+    if (!/\d/.test(newPassword)) {
+      setModalError('Password must contain at least one number.');
+      return;
+    }
+    if (!/[@$!%*?&#_+-]/.test(newPassword)) {
+      setModalError('Password must contain at least one special character (e.g. @$!%*?&#_+-).');
       return;
     }
     if (newPassword !== confirmPassword) {
