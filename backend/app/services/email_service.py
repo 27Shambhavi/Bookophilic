@@ -13,6 +13,22 @@ class EmailService:
         smtp_password = os.getenv("SMTP_PASSWORD", "")
         smtp_from = os.getenv("SMTP_FROM", smtp_username or "noreply@bookophilic.com")
 
+        # Auto-detect common email provider settings if server/port are not explicitly provided
+        if smtp_username and not smtp_server:
+            clean_username = smtp_username.strip().lower()
+            if clean_username.endswith("@gmail.com"):
+                smtp_server = "smtp.gmail.com"
+                if not smtp_port:
+                    smtp_port = "587"
+            elif clean_username.endswith("@outlook.com") or clean_username.endswith("@hotmail.com"):
+                smtp_server = "smtp.office365.com"
+                if not smtp_port:
+                    smtp_port = "587"
+            elif clean_username.endswith("@yahoo.com"):
+                smtp_server = "smtp.mail.yahoo.com"
+                if not smtp_port:
+                    smtp_port = "465"
+
         subject = "Bookophilic - Password Reset OTP"
         body = f"""
         <html>
@@ -37,7 +53,7 @@ class EmailService:
 
         if not smtp_server or not smtp_username or not smtp_password:
             print("Warning: SMTP settings not configured in environment. OTP has been logged to console above.")
-            return True
+            return False
 
         try:
             msg = MIMEMultipart()

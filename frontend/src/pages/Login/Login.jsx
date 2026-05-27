@@ -34,8 +34,12 @@ export default function Login() {
     setModalError('');
     setModalSuccess('');
     try {
-      await authService.forgotPassword(forgotEmail);
-      setModalSuccess('OTP code has been triggered. Please check your email inbox (or backend logs).');
+      const res = await authService.forgotPassword(forgotEmail);
+      if (res && res.otp_fallback) {
+        setModalSuccess(`OTP generated! Since SMTP email failed or isn't set up, please use this test OTP: ${res.otp_fallback}`);
+      } else {
+        setModalSuccess('OTP code has been triggered. Please check your email inbox.');
+      }
       setModalStep(2);
     } catch (err) {
       console.error(err);

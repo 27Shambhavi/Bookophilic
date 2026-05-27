@@ -108,10 +108,10 @@ def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
     email_sent = EmailService.send_otp_email(user.email, otp)
     if not email_sent:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to send OTP email. Please check your SMTP configuration in Render dashboard environment variables."
-        )
+        return {
+            "message": "OTP code generated successfully (fallback: SMTP server is not connected/failed).",
+            "otp_fallback": otp
+        }
     return {"message": "OTP code sent successfully to email"}
 
 @router.post("/verify-otp")
