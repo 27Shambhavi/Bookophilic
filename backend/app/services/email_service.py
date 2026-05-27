@@ -61,5 +61,5 @@ class EmailService:
             return True
         except Exception as e:
             print(f"Error sending email via SMTP: {e}")
-            print("Make sure your SMTP credentials are correct. Falling back to the logged OTP code.")
-            return True
+            print("Make sure your SMTP credentials are correct.")
+            return False
