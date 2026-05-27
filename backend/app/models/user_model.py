@@ -33,7 +33,7 @@ class UserPreference(Base):
     preferred_genres = Column(Text, nullable=True)  # Comma-separated or JSON
     theme = Column(String(50), default="dark")
     reading_goal_pages = Column(Integer, default=50)
-    avatar = Column(String(255), nullable=True)  # E.g. Emoji / ID string
+    avatar = Column(Text, nullable=True)  # E.g. Base64-encoded image URL or emoji
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     user = relationship("User", back_populates="preferences")

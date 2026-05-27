@@ -82,6 +82,49 @@ export default function Profile() {
     loadSessions();
   }, [navigate]);
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert("Please select an image file only.");
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 128;
+        const MAX_HEIGHT = 128;
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        setAvatar(dataUrl);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -171,9 +214,48 @@ export default function Profile() {
               {/* Preferences Form */}
               <form onSubmit={handleSave} className="glass-panel rounded-3xl p-6 md:p-8 border border-white/5 space-y-6">
                 
+                {/* Avatar Preview & Upload */}
+                <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-white/5">
+                  <div className="relative w-20 h-20 rounded-full border border-white/10 flex items-center justify-center overflow-hidden bg-slate-900 shadow-glass-glow shrink-0">
+                    {avatar && avatar.startsWith('data:image/') ? (
+                      <img src={avatar} alt="Avatar preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-4xl select-none">{avatar || '📚'}</span>
+                    )}
+                  </div>
+                  <div className="space-y-2 text-center sm:text-left">
+                    <h4 className="text-sm font-bold text-white uppercase tracking-wider select-none">Profile Picture</h4>
+                    <p className="text-xs text-slate-400 select-none">Upload a custom image file (JPEG, PNG) or select one of the study emojis below.</p>
+                    <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-1">
+                      <input 
+                        type="file" 
+                        id="avatar-image-upload" 
+                        accept="image/*" 
+                        onChange={handleImageUpload} 
+                        className="hidden" 
+                      />
+                      <label 
+                        htmlFor="avatar-image-upload"
+                        className="px-3.5 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-glass-glow select-none"
+                      >
+                        Upload Photo
+                      </label>
+                      {avatar && avatar.startsWith('data:image/') && (
+                        <button
+                          type="button"
+                          onClick={() => setAvatar('📚')}
+                          className="px-3.5 py-1.5 bg-red-500/15 hover:bg-red-500/25 border border-red-500/20 text-red-400 hover:text-red-300 text-xs font-bold rounded-xl transition-all cursor-pointer select-none"
+                        >
+                          Remove Photo
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 {/* Avatar Selector Grid */}
                 <div className="space-y-3">
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Select Study Avatar</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Or Select Study Emoji</label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {AVATAR_OPTIONS.map((opt) => (
                       <button

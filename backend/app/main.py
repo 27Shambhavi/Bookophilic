@@ -42,10 +42,22 @@ try:
 
     try:
         with engine.begin() as conn:
-            conn.execute(text("ALTER TABLE user_preferences ADD COLUMN avatar VARCHAR(255) DEFAULT NULL"))
+            conn.execute(text("ALTER TABLE user_preferences ADD COLUMN avatar TEXT DEFAULT NULL"))
         print("Column avatar added to user_preferences table successfully.")
     except Exception:
-        pass
+        # If column already exists, try to modify its type to accommodate base64 image files
+        try:
+            with engine.begin() as conn:
+                db_url_str = str(engine.url)
+                if "mysql" in db_url_str:
+                    conn.execute(text("ALTER TABLE user_preferences MODIFY COLUMN avatar LONGTEXT DEFAULT NULL"))
+                    print("Modified user_preferences.avatar column to LONGTEXT (MySQL).")
+                elif "postgresql" in db_url_str:
+                    conn.execute(text("ALTER TABLE user_preferences ALTER COLUMN avatar TYPE TEXT"))
+                    print("Modified user_preferences.avatar column to TEXT (PostgreSQL).")
+        except Exception as modify_err:
+            print(f"Warning: Could not alter user_preferences.avatar column type: {modify_err}")
+            pass
     
     # Auto-seed main genres
     from app.database.connection import SessionLocal
