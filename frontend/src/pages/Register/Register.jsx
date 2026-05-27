@@ -54,7 +54,7 @@ export default function Register() {
           <div className="p-0.5 rounded-2xl shadow-glass-glow w-11 h-11 flex items-center justify-center overflow-hidden border border-white/10 bg-slate-900">
             <img src={logo} alt="Bookophilic Logo" className="w-full h-full object-cover rounded-xl" />
           </div>
-          <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-primary-300 bg-clip-text text-transparent">
+          <span className="text-2xl font-extrabold tracking-tight brand-name-gradient bg-clip-text text-transparent">
             Bookophilic
           </span>
         </div>

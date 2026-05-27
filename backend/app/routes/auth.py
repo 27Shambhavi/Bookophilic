@@ -2,11 +2,16 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.database.connection import get_db
-from app.schemas.user_schema import UserCreate, UserResponse, Token, UserPreferenceUpdate, UserPreferenceResponse
+from app.schemas.user_schema import (
+    UserCreate, UserResponse, Token, UserPreferenceUpdate, UserPreferenceResponse,
+    ForgotPasswordRequest, VerifyOTPRequest, ResetPasswordRequest
+)
 from app.models.user_model import User, UserPreference
 from app.services.auth_service import AuthService
 from app.dependencies.auth import get_current_user
-from datetime import timedelta
+from datetime import datetime, timedelta
+import random
+from app.services.email_service import EmailService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -81,3 +86,73 @@ def update_preferences(
     db.commit()
     db.refresh(prefs)
     return prefs
+
+@router.post("/forgot-password")
+def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == req.email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User with this email does not exist"
+        )
+    
+    otp = f"{random.randint(100000, 999999)}"
+    user.otp_code = otp
+    user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+    db.commit()
+
+    EmailService.send_otp_email(user.email, otp)
+    return {"message": "OTP code sent successfully to email"}
+
+@router.post("/verify-otp")
+def verify_otp(req: VerifyOTPRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == req.email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    if not user.otp_code or user.otp_code != req.otp:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid OTP code"
+        )
+    
+    if not user.otp_expiry or user.otp_expiry < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP code has expired"
+        )
+    
+    # Generate temporary password reset JWT token valid for 10 minutes
+    reset_token = AuthService.create_access_token(
+        data={"sub": user.email, "type": "password_reset"},
+        expires_delta=timedelta(minutes=10)
+    )
+    return {"reset_token": reset_token}
+
+@router.post("/reset-password")
+def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
+    payload = AuthService.decode_access_token(req.reset_token)
+    if not payload or payload.get("type") != "password_reset":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired reset token"
+        )
+    
+    email = payload.get("sub")
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Update password and clear OTP fields
+    user.hashed_password = AuthService.get_password_hash(req.new_password)
+    user.otp_code = None
+    user.otp_expiry = None
+    db.commit()
+    
+    return {"message": "Password reset successfully"}

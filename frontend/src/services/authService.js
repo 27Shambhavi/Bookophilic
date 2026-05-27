@@ -62,6 +62,24 @@ const authService = {
     });
     return response.data;
   },
+
+  async forgotPassword(email) {
+    const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
+    return response.data;
+  },
+
+  async verifyOtp(email, otp) {
+    const response = await axios.post(`${API_URL}/auth/verify-otp`, { email, otp });
+    return response.data;
+  },
+
+  async resetPassword(resetToken, newPassword) {
+    const response = await axios.post(`${API_URL}/auth/reset-password`, {
+      reset_token: resetToken,
+      new_password: newPassword,
+    });
+    return response.data;
+  },
 };
 
 export default authService;

@@ -24,6 +24,21 @@ try:
     except Exception as alter_err:
         # Column already exists or table not initialized yet
         pass
+        
+    # Ensure otp_code and otp_expiry columns exist in users table
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN otp_code VARCHAR(10) DEFAULT NULL"))
+        print("Column otp_code added to users table successfully.")
+    except Exception:
+        pass
+
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN otp_expiry DATETIME DEFAULT NULL"))
+        print("Column otp_expiry added to users table successfully.")
+    except Exception:
+        pass
     
     # Auto-seed main genres
     from app.database.connection import SessionLocal

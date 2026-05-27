@@ -79,7 +79,7 @@ export default function Navbar() {
             <div className="p-0.5 rounded-xl shadow-glass-glow group-hover:scale-105 transition-all w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center overflow-hidden border border-white/10 bg-slate-900 shrink-0">
               <img src={logo} alt="Bookophilic Logo" className="w-full h-full object-cover rounded-lg" />
             </div>
-            <span className="text-xl sm:text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-primary-300 bg-clip-text text-transparent">
+            <span className="text-xl sm:text-2xl font-extrabold tracking-tight brand-name-gradient bg-clip-text text-transparent">
               Bookophilic
             </span>
           </Link>
@@ -147,7 +147,7 @@ export default function Navbar() {
                 <div className="p-0.5 rounded-lg w-8 h-8 flex items-center justify-center overflow-hidden border border-white/10 bg-slate-900">
                   <img src={logo} alt="" className="w-full h-full object-cover rounded" />
                 </div>
-                <span className="text-lg font-bold text-white">Bookophilic</span>
+                <span className="text-lg font-bold brand-name-gradient bg-clip-text text-transparent">Bookophilic</span>
               </Link>
               <button
                 onClick={() => setIsDrawerOpen(false)}

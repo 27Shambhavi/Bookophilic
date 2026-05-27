@@ -15,6 +15,85 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Forgot Password flow states
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [modalStep, setModalStep] = useState(1); // 1 = Email, 2 = OTP, 3 = New Password
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotOtp, setForgotOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [resetToken, setResetToken] = useState('');
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalError, setModalError] = useState('');
+  const [modalSuccess, setModalSuccess] = useState('');
+
+  const handleForgotEmailSubmit = async (e) => {
+    e.preventDefault();
+    if (!forgotEmail) return;
+    setModalLoading(true);
+    setModalError('');
+    setModalSuccess('');
+    try {
+      await authService.forgotPassword(forgotEmail);
+      setModalSuccess('OTP code has been triggered. Please check your email inbox (or backend logs).');
+      setModalStep(2);
+    } catch (err) {
+      console.error(err);
+      setModalError(err.response?.data?.detail || 'Failed to send OTP code. Please try again.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleForgotOtpSubmit = async (e) => {
+    e.preventDefault();
+    if (!forgotOtp) return;
+    setModalLoading(true);
+    setModalError('');
+    setModalSuccess('');
+    try {
+      const data = await authService.verifyOtp(forgotEmail, forgotOtp);
+      setResetToken(data.reset_token);
+      setModalSuccess('OTP code verified successfully. Set your new password below.');
+      setModalStep(3);
+    } catch (err) {
+      console.error(err);
+      setModalError(err.response?.data?.detail || 'Invalid or expired OTP code.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (!newPassword || !confirmPassword) return;
+    if (newPassword.length < 6) {
+      setModalError('Password must be at least 6 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setModalError('Passwords do not match.');
+      return;
+    }
+    setModalLoading(true);
+    setModalError('');
+    setModalSuccess('');
+    try {
+      await authService.resetPassword(resetToken, newPassword);
+      setModalSuccess('Password reset successfully! You can now log in.');
+      setTimeout(() => {
+        setShowForgotPasswordModal(false);
+        // Pre-fill email in login form
+        setEmail(forgotEmail);
+      }, 2000);
+    } catch (err) {
+      console.error(err);
+      setModalError(err.response?.data?.detail || 'Failed to reset password. The link may have expired.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) return;
@@ -51,7 +130,7 @@ export default function Login() {
           <div className="p-0.5 rounded-2xl shadow-glass-glow w-11 h-11 flex items-center justify-center overflow-hidden border border-white/10 bg-slate-900">
             <img src={logo} alt="Bookophilic Logo" className="w-full h-full object-cover rounded-xl" />
           </div>
-          <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-primary-300 bg-clip-text text-transparent">
+          <span className="text-2xl font-extrabold tracking-tight brand-name-gradient bg-clip-text text-transparent">
             Bookophilic
           </span>
         </div>
@@ -216,6 +295,18 @@ export default function Login() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide">Password</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgotPasswordModal(true);
+                      setModalStep(1);
+                      setModalError('');
+                      setModalSuccess('');
+                    }}
+                    className="text-xs text-violet-400 hover:text-violet-300 font-bold hover:underline cursor-pointer"
+                  >
+                    Forgot password?
+                  </button>
                 </div>
                 <div className="relative">
                   <Key className="w-4 h-4 text-slate-500 absolute left-4 top-4" />
@@ -263,6 +354,154 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPasswordModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fadeIn">
+          {/* Modal Backdrop */}
+          <div 
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm"
+            onClick={() => {
+              if (!modalLoading) setShowForgotPasswordModal(false);
+            }}
+          />
+
+          {/* Modal Content */}
+          <div className="relative w-full max-w-md bg-slate-950/95 border border-white/10 p-8 rounded-[2rem] shadow-2xl z-10 space-y-6">
+            <div className="absolute inset-0 rounded-[2rem] bg-violet-600/5 blur-2xl pointer-events-none" />
+
+            <div className="flex justify-between items-center relative z-10 border-b border-white/5 pb-3">
+              <h3 className="text-xl font-bold text-white tracking-tight">
+                Reset Password
+              </h3>
+              <button
+                onClick={() => setShowForgotPasswordModal(false)}
+                disabled={modalLoading}
+                className="text-slate-400 hover:text-white transition-all text-sm font-extrabold cursor-pointer"
+                title="Close modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            {modalError && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl p-3.5 flex items-start gap-2.5 text-xs font-semibold relative z-10">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{modalError}</span>
+              </div>
+            )}
+
+            {modalSuccess && (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl p-3.5 flex items-start gap-2.5 text-xs font-semibold relative z-10">
+                <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{modalSuccess}</span>
+              </div>
+            )}
+
+            {/* Step 1: Input Email */}
+            {modalStep === 1 && (
+              <form onSubmit={handleForgotEmailSubmit} className="space-y-4 relative z-10">
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Enter your email address below. We'll send you a 6-digit One-Time Password (OTP) to verify your account.
+                </p>
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide">Email Address</label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-slate-500 absolute left-4 top-4" />
+                    <input
+                      type="email" required
+                      placeholder="you@example.com"
+                      className="w-full bg-slate-900/60 border border-white/10 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/20 rounded-xl pl-12 pr-4 py-3.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none transition-all"
+                      value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={modalLoading}
+                  className="w-full py-3.5 rounded-xl bg-gradient-kinnectric text-white font-bold text-sm shadow-kinnectric-glow hover:shadow-kinnectric-glow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                >
+                  {modalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send OTP Code'}
+                </button>
+              </form>
+            )}
+
+            {/* Step 2: Input OTP */}
+            {modalStep === 2 && (
+              <form onSubmit={handleForgotOtpSubmit} className="space-y-4 relative z-10">
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Please enter the 6-digit validation OTP sent to <strong className="text-white">{forgotEmail}</strong>.
+                </p>
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide">One-Time Password (OTP)</label>
+                  <input
+                    type="text" required maxLength={6}
+                    placeholder="123456"
+                    className="w-full bg-slate-900/60 border border-white/10 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/20 rounded-xl px-4 py-3.5 text-center tracking-[8px] text-lg font-bold text-white focus:outline-none transition-all"
+                    value={forgotOtp} onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, ''))}
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setModalStep(1)}
+                    disabled={modalLoading}
+                    className="flex-1 py-3.5 rounded-xl border border-white/10 hover:bg-white/5 text-slate-300 font-bold text-sm text-center cursor-pointer transition-all"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={modalLoading}
+                    className="flex-[2] py-3.5 rounded-xl bg-gradient-kinnectric text-white font-bold text-sm shadow-kinnectric-glow hover:shadow-kinnectric-glow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                  >
+                    {modalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify OTP'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Step 3: Enter New Password */}
+            {modalStep === 3 && (
+              <form onSubmit={handleResetPasswordSubmit} className="space-y-4 relative z-10">
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide">New Password</label>
+                  <div className="relative">
+                    <Key className="w-4 h-4 text-slate-500 absolute left-4 top-4" />
+                    <input
+                      type="password" required minLength={6}
+                      placeholder="••••••••"
+                      className="w-full bg-slate-900/60 border border-white/10 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/20 rounded-xl pl-12 pr-4 py-3.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none transition-all"
+                      value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide">Confirm New Password</label>
+                  <div className="relative">
+                    <Key className="w-4 h-4 text-slate-500 absolute left-4 top-4" />
+                    <input
+                      type="password" required
+                      placeholder="••••••••"
+                      className="w-full bg-slate-900/60 border border-white/10 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/20 rounded-xl pl-12 pr-4 py-3.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none transition-all"
+                      value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={modalLoading}
+                  className="w-full py-3.5 rounded-xl bg-gradient-kinnectric text-white font-bold text-sm shadow-kinnectric-glow hover:shadow-kinnectric-glow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                >
+                  {modalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Reset Password'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

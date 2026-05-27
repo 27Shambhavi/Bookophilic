@@ -11,6 +11,10 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     full_name = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    
+    # OTP for password reset
+    otp_code = Column(String(10), nullable=True)
+    otp_expiry = Column(DateTime, nullable=True)
 
     # Relationships
     preferences = relationship("UserPreference", back_populates="user", uselist=False, cascade="all, delete-orphan")
