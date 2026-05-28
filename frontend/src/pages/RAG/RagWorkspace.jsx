@@ -13,7 +13,7 @@ export default function RagWorkspace() {
   const [chats, setChats] = useState([
     {
       role: 'assistant',
-      content: "Hello! Welcome to your Private RAG Workspace. Ask me questions about the books you've read, notes you've logged, or flashcards you've studied. I respond using ONLY your personal intellectual catalog.",
+      content: "Hello! Welcome to your Private RAG Workspace. Ask me questions about the books you've read, notes you've logged, or flashcards you've studied. I prioritize responding using your personal intellectual catalog, but can dynamically draw on my general knowledge to answer any query!",
       sources: []
     }
   ]);

@@ -66,7 +66,8 @@ try:
     try:
         genre_names = [
             "Self-help", "Psychology", "Finance", "Philosophy", "Fiction", 
-            "Business", "Spirituality", "Science", "Tech", "History"
+            "Business", "Spirituality", "Science", "Tech", "History",
+            "Non-Fiction", "Biography"
         ]
         for name in genre_names:
             existing = db.query(Genre).filter(Genre.name == name).first()
