@@ -12,6 +12,43 @@ import aiService from '../../services/aiService';
 import authService from '../../services/authService';
 import mentorService from '../../services/mentor_service';
 
+const parseNoteContent = (content) => {
+  const highlightRegex = /^💡 Highlight:\s*(.*)$/m;
+  const thoughtRegex = /^📝 Thought:\s*(.*)$/m;
+  const categoryRegex = /^🏷️ Category:\s*(.*)$/m;
+  const colorRegex = /^🎨 Color:\s*(.*)$/m;
+
+  const highlightMatch = content.match(highlightRegex);
+  const thoughtMatch = content.match(thoughtRegex);
+  const categoryMatch = content.match(categoryRegex);
+  const colorMatch = content.match(colorRegex);
+
+  if (highlightMatch || thoughtMatch) {
+    return {
+      isStructured: true,
+      highlight: highlightMatch ? highlightMatch[1].replace(/^"|"$/g, '') : '',
+      thought: thoughtMatch ? thoughtMatch[1] : '',
+      category: categoryMatch ? categoryMatch[1] : 'Learnings',
+      color: colorMatch ? colorMatch[1] : 'yellow'
+    };
+  }
+
+  return {
+    isStructured: false,
+    highlight: '',
+    thought: content,
+    category: 'Learnings',
+    color: 'yellow'
+  };
+};
+
+const COLOR_MAP = {
+  yellow: { border: 'border-l-4 border-l-amber-400', bg: 'bg-amber-500/5', text: 'text-amber-400' },
+  blue: { border: 'border-l-4 border-l-cyan-400', bg: 'bg-cyan-500/5', text: 'text-cyan-400' },
+  green: { border: 'border-l-4 border-l-emerald-400', bg: 'bg-emerald-500/5', text: 'text-emerald-400' },
+  pink: { border: 'border-l-4 border-l-pink-400', bg: 'bg-pink-500/5', text: 'text-pink-400' }
+};
+
 export default function BookDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -27,6 +64,12 @@ export default function BookDetails() {
   const [progressPage, setProgressPage] = useState(0);
   const [newNote, setNewNote] = useState('');
   const [notePage, setNotePage] = useState('');
+  
+  // New structured note states
+  const [noteHighlight, setNoteHighlight] = useState('');
+  const [noteThought, setNoteThought] = useState('');
+  const [noteColor, setNoteColor] = useState('yellow');
+  const [noteCategory, setNoteCategory] = useState('Learnings');
   
   // AI triggers states
   const [aiSummary, setAiSummary] = useState('');
@@ -284,14 +327,27 @@ export default function BookDetails() {
 
   const handleAddNote = async (e) => {
     e.preventDefault();
-    if (!newNote.trim()) return;
+    if (!noteThought.trim() && !noteHighlight.trim()) return;
 
     try {
       const page = notePage ? parseInt(notePage) : null;
-      const created = await noteService.createNote(bookId, newNote, page);
+      
+      let finalContent = "";
+      if (noteHighlight.trim()) {
+        finalContent += `💡 Highlight: "${noteHighlight.trim()}"\n`;
+      }
+      if (noteThought.trim()) {
+        finalContent += `📝 Thought: ${noteThought.trim()}\n`;
+      }
+      finalContent += `🏷️ Category: ${noteCategory}\n🎨 Color: ${noteColor}`;
+
+      const created = await noteService.createNote(bookId, finalContent, page);
       setNotes([created, ...notes]);
-      setNewNote('');
+      setNoteHighlight('');
+      setNoteThought('');
       setNotePage('');
+      setNoteColor('yellow');
+      setNoteCategory('Learnings');
       if (activeSession) {
         setSessionNotesCount(prev => prev + 1);
       }
@@ -619,69 +675,161 @@ export default function BookDetails() {
               {/* Render Active Tab */}
               {activeTab === 'notes' && (
                 <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                      <FileText className="w-5 h-5 text-teal-400" /> Book Annotations
-                    </h3>
-                    <span className="text-xs text-slate-400 font-bold">{notes.length} total</span>
+                  {/* Progress Badge */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/5 border border-white/5 p-4 rounded-2xl select-none font-sans">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400">
+                        <Trophy className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white">Insight Pioneer</h4>
+                        <p className="text-[10px] text-slate-400 mt-0.5">You have captured {notes.length} key insights from this book!</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 font-extrabold uppercase tracking-wider">{notes.length} total annotations</span>
                   </div>
 
                   {/* Add Note Form */}
-                  <form onSubmit={handleAddNote} className="glass-panel rounded-2xl p-4 border border-white/5 space-y-3">
-                    <div className="relative">
-                      <textarea
-                        className="w-full h-20 bg-slate-900/50 border border-white/5 focus:border-primary-500 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none transition-all resize-none"
-                        placeholder="Record an annotation, summary point, or highlight..."
-                        value={newNote}
-                        onChange={(e) => setNewNote(e.target.value)}
+                  <form onSubmit={handleAddNote} className="glass-panel rounded-2xl p-5 border border-white/5 space-y-4">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider select-none">Capture New Insight</h4>
+                    
+                    {/* Highlight input */}
+                    <div className="space-y-1.5 relative">
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide select-none">Highlighted Quote / Passage</label>
+                      <input
+                        type="text"
+                        className="w-full bg-slate-900/50 border border-white/5 focus:border-primary-500 rounded-xl pl-4 pr-12 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition-all"
+                        placeholder="Paste or type book quote here (e.g. 'Discipline beats motivation.')..."
+                        value={noteHighlight}
+                        onChange={(e) => setNoteHighlight(e.target.value)}
                       />
                       <button
                         type="button"
                         onClick={startSpeechRecognition}
-                        className={`absolute right-3 top-3 p-2 rounded-xl transition-all cursor-pointer ${
-                          isRecording ? 'bg-red-500/20 text-red-400 animate-pulse border border-red-500/30' : 'bg-white/5 text-slate-400 hover:text-slate-200 border border-white/5 hover:bg-white/10'
+                        className={`absolute right-2.5 top-[21px] p-1.5 rounded-lg transition-all cursor-pointer ${
+                          isRecording ? 'bg-red-500/20 text-red-400 animate-pulse border border-red-500/30' : 'bg-white/5 text-slate-500 hover:text-slate-200 border border-white/5 hover:bg-white/10'
                         }`}
-                        title={isRecording ? "Recording... Speak clearly!" : "Dictate Note (Speech-to-Text)"}
+                        title={isRecording ? "Recording... Speak!" : "Dictate (Speech-to-Text)"}
                       >
-                        <Mic className="w-4 h-4" />
+                        <Mic className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <div className="flex justify-between items-center gap-3">
-                      <input
-                        type="number"
-                        placeholder="Page (Optional)"
-                        className="w-32 bg-slate-900 border border-white/5 focus:border-primary-500 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none"
-                        value={notePage}
-                        onChange={(e) => setNotePage(e.target.value)}
+
+                    {/* Thought input */}
+                    <div className="space-y-1.5">
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide select-none">My Thought / Reflection</label>
+                      <textarea
+                        className="w-full h-20 bg-slate-900/50 border border-white/5 focus:border-primary-500 rounded-xl p-3 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition-all resize-none"
+                        placeholder="Add your own thought, task, or note (e.g. 'Need this for placements prep.')..."
+                        value={noteThought}
+                        onChange={(e) => setNoteThought(e.target.value)}
                       />
+                    </div>
+
+                    {/* Metadata: Category, Color, Page */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                      {/* Category */}
+                      <div className="space-y-1.5">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide select-none">Category</label>
+                        <select
+                          className="w-full bg-slate-900 border border-white/5 focus:border-primary-500 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none cursor-pointer"
+                          value={noteCategory}
+                          onChange={(e) => setNoteCategory(e.target.value)}
+                        >
+                          <option value="Learnings">💡 Learning</option>
+                          <option value="Quotes">💬 Quote</option>
+                          <option value="Ideas">⚡ Idea</option>
+                          <option value="Action Items">🎯 Action Item</option>
+                          <option value="Vocabulary">📖 Vocabulary</option>
+                          <option value="Personal Reflections">🧘 Reflection</option>
+                        </select>
+                      </div>
+
+                      {/* Color */}
+                      <div className="space-y-1.5">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide select-none">Highlight Color</label>
+                        <div className="flex items-center gap-2 h-[34px]">
+                          {[
+                            { name: 'yellow', color: 'bg-amber-400' },
+                            { name: 'blue', color: 'bg-cyan-400' },
+                            { name: 'green', color: 'bg-emerald-400' },
+                            { name: 'pink', color: 'bg-pink-400' }
+                          ].map(item => (
+                            <button
+                              key={item.name}
+                              type="button"
+                              onClick={() => setNoteColor(item.name)}
+                              className={`w-6 h-6 rounded-full ${item.color} transition-all relative cursor-pointer active:scale-90 ${
+                                noteColor === item.name ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-950 scale-110' : 'opacity-70 hover:opacity-100'
+                              }`}
+                              title={item.name}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Page */}
+                      <div className="space-y-1.5">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide select-none">Page Number</label>
+                        <input
+                          type="number"
+                          placeholder="e.g. 42 (Optional)"
+                          className="w-full bg-slate-900 border border-white/5 focus:border-primary-500 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none"
+                          value={notePage}
+                          onChange={(e) => setNotePage(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end pt-2 border-t border-white/5">
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-bold text-xs rounded-xl shadow-glass-glow transition-all flex items-center gap-1.5 cursor-pointer"
+                        disabled={!noteThought.trim() && !noteHighlight.trim()}
+                        className="px-4 py-2.5 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-glass-glow transition-all flex items-center gap-1.5 cursor-pointer"
                       >
-                        <Plus className="w-4 h-4" /> Save Annotation
+                        <Plus className="w-4 h-4" /> Capture Insight
                       </button>
                     </div>
                   </form>
 
                   {/* Notes List */}
-                  <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/5">
                     {notes.length > 0 ? (
-                      notes.map((note) => (
-                        <div key={note.id} className="bg-white/5 border border-white/5 rounded-xl p-4 text-sm relative group hover:border-white/10 transition-all">
-                          <div className="flex justify-between items-start mb-1 text-slate-400 font-semibold text-xs pr-8">
-                            <span>{note.page_number ? `Page ${note.page_number}` : 'General Log'}</span>
-                            <span>{new Date(note.created_at).toLocaleDateString()}</span>
+                      notes.map((note) => {
+                        const parsed = parseNoteContent(note.content);
+                        const col = COLOR_MAP[parsed.color] || COLOR_MAP.yellow;
+                        return (
+                          <div key={note.id} className={`border border-white/5 ${col.border} ${col.bg} rounded-xl p-4 text-sm relative group hover:border-white/10 transition-all space-y-2`}>
+                            <div className="flex justify-between items-start text-slate-400 font-semibold text-xs pr-8 select-none">
+                              <div className="flex items-center gap-2">
+                                <span className={`px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] uppercase tracking-wider font-extrabold ${col.text}`}>
+                                  {parsed.category}
+                                </span>
+                                <span>{note.page_number ? `Page ${note.page_number}` : 'General Log'}</span>
+                              </div>
+                              <span>{new Date(note.created_at).toLocaleDateString()}</span>
+                            </div>
+
+                            {parsed.highlight && (
+                              <blockquote className="border-l border-white/10 pl-3 italic text-slate-400 text-xs my-1 bg-white/[0.01] py-1 rounded">
+                                "{parsed.highlight}"
+                              </blockquote>
+                            )}
+                            
+                            <p className="text-slate-200 leading-relaxed pr-8 whitespace-pre-line">
+                              {parsed.thought}
+                            </p>
+
+                            <button
+                              onClick={() => handleDeleteNote(note.id)}
+                              className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 hover:text-red-300 text-red-400 opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer border border-red-500/20"
+                              title="Delete Annotation"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
-                          <p className="text-slate-200 leading-relaxed pr-8">{note.content}</p>
-                          <button
-                            onClick={() => handleDeleteNote(note.id)}
-                            className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 hover:text-red-300 text-red-400 opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer border border-red-500/20"
-                            title="Delete Annotation"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))
+                        );
+                      })
                     ) : (
                       <p className="text-slate-500 text-sm text-center py-6">No annotations created yet. Type above or click mic to dictate one!</p>
                     )}

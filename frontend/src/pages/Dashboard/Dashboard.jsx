@@ -666,14 +666,22 @@ export default function Dashboard() {
             </div>
 
             {/* Grid of Interests */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/5">
               {[
-                { name: 'Science', label: '🧪 Scientific', desc: 'Cosmology, Physics, AI' },
-                { name: 'Fiction', label: '🎭 Fiction', desc: 'Fantasy, Novels, Stories' },
-                { name: 'Non-Fiction', label: '📚 Non-Fiction', desc: 'Humankind, History' },
+                { name: 'Science', label: '🧪 Scientific', desc: 'Cosmology, Physics' },
+                { name: 'Fiction', label: '🎭 Fiction', desc: 'Fantasy, Novels' },
+                { name: 'Non-Fiction', label: '📚 Non-Fiction', desc: 'Sapiens, Truths' },
                 { name: 'Biography', label: '👤 Biography', desc: 'Steve Jobs, Memoirs' },
                 { name: 'Self-help', label: '💡 Self Help', desc: 'Habits, Productivity' },
                 { name: 'Spirituality', label: '🧘 Spiritual', desc: 'Mindfulness, Zen' },
+                { name: 'History', label: '🏛️ History', desc: 'Civilizations, War' },
+                { name: 'Psychology', label: '🧠 Psychology', desc: 'Mind, Human Behavior' },
+                { name: 'Business', label: '💼 Business', desc: 'Startups, Leadership' },
+                { name: 'Tech', label: '💻 Tech & AI', desc: 'Algorithms, Coding' },
+                { name: 'Philosophy', label: '📜 Philosophy', desc: 'Stoicism, Logic' },
+                { name: 'Mystery/Thriller', label: '🔍 Mystery', desc: 'Suspense, Thrillers' },
+                { name: 'Poetry/Drama', label: '✍️ Poetry', desc: 'Verses, Plays' },
+                { name: 'Health/Wellness', label: '🍀 Health', desc: 'Fitness, Nutrition' },
               ].map((genre) => {
                 const isSelected = selectedOnboardingGenres.includes(genre.name);
                 return (

@@ -4,6 +4,7 @@ from app.models.book_model import Book
 from app.schemas.note_schema import NoteCreate, NoteUpdate
 import sys
 import os
+import math
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 AI_SERVICES_DIR = os.path.join(ROOT_DIR, "ai-services")
@@ -12,11 +13,15 @@ if AI_SERVICES_DIR not in sys.path:
 
 from summarization.summarizer import BookSummarizer
 from agents.reflection_agent import ReflectionAgent
+from ollama.ollama_client import OllamaClient
+from embeddings.vector_store import SimpleVectorStore
 
 class NoteService:
     def __init__(self):
         self.summarizer = BookSummarizer()
         self.reflection_agent = ReflectionAgent()
+        self.ollama = OllamaClient()
+        self.vector_store = SimpleVectorStore()
 
     def get_notes_by_user(self, db: Session, user_id: int, skip: int = 0, limit: int = 100):
         return db.query(Note).filter(Note.user_id == user_id).offset(skip).limit(limit).all()
@@ -76,3 +81,64 @@ class NoteService:
             
         notes_text = "\n".join([n.content for n in notes])
         return self.reflection_agent.generate_reflection_questions(notes_text, book_title)
+
+    def _cosine_similarity(self, v1: list, v2: list) -> float:
+        if not v1 or not v2 or len(v1) != len(v2):
+            return 0.0
+        dot_product = sum(a * b for a, b in zip(v1, v2))
+        magnitude_v1 = math.sqrt(sum(a * a for a in v1))
+        magnitude_v2 = math.sqrt(sum(a * a for a in v2))
+        if magnitude_v1 == 0 or magnitude_v2 == 0:
+            return 0.0
+        return dot_product / (magnitude_v1 * magnitude_v2)
+
+    def _get_cached_embedding(self, key: str, text: str) -> list:
+        vector = self.vector_store.get_vector(key)
+        if not vector:
+            vector = self.ollama.get_embeddings(text)
+            self.vector_store.add_vector(key, vector)
+        return vector
+
+    def semantic_search_notes(self, db: Session, user_id: int, query: str) -> list:
+        notes = db.query(Note).filter(Note.user_id == user_id).all()
+        if not notes or not query.strip():
+            return []
+
+        query_vector = self.ollama.get_embeddings(query)
+        candidates = []
+
+        for n in notes:
+            book = db.query(Book).filter(Book.id == n.book_id).first()
+            book_title = book.title if book else "Unknown Book"
+            text = f"Note on book '{book_title}': {n.content}"
+            key = f"user_{user_id}_note_{n.id}"
+            vector = self._get_cached_embedding(key, text)
+            score = self._cosine_similarity(query_vector, vector)
+            candidates.append((n, score))
+
+        candidates.sort(key=lambda x: x[1], reverse=True)
+        
+        result = []
+        for note, score in candidates:
+            result.append({
+                "id": note.id,
+                "book_id": note.book_id,
+                "user_id": note.user_id,
+                "content": note.content,
+                "page_number": note.page_number,
+                "created_at": note.created_at,
+                "score": round(score, 3)
+            })
+        return result
+
+    def generate_action_points(self, text: str) -> str:
+        prompt = f"Given this reader note/quote, convert it into 1-2 practical, actionable daily tasks/habits for the reader. Be direct and concise.\n\nNote: {text}"
+        return self.ollama.generate(prompt)
+
+    def generate_quiz(self, text: str) -> str:
+        prompt = f"Given this note/quote, create 2 multiple choice questions (MCQs) to test the reader's active recall. Format with choices (A, B, C, D) and specify the correct answer.\n\nNote: {text}"
+        return self.ollama.generate(prompt)
+
+    def generate_single_summary(self, text: str) -> str:
+        prompt = f"Condense the following reader note or quote into a single punchy, high-impact key takeaway (10-15 words maximum) that summarizes the core wisdom.\n\nNote: {text}"
+        return self.ollama.generate(prompt)

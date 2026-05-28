@@ -73,3 +73,34 @@ def reflect_on_notes(
 ):
     reflections = note_service.generate_note_reflections(db, current_user.id, book_id)
     return {"reflections": reflections}
+
+from pydantic import BaseModel
+
+class ActionPointsRequest(BaseModel):
+    text: str
+
+class QuizRequest(BaseModel):
+    text: str
+
+class SummarySingleRequest(BaseModel):
+    text: str
+
+@router.post("/action-points")
+def get_action_points(req: ActionPointsRequest):
+    return {"action_points": note_service.generate_action_points(req.text)}
+
+@router.post("/quiz")
+def get_quiz(req: QuizRequest):
+    return {"quiz": note_service.generate_quiz(req.text)}
+
+@router.post("/summarize-single")
+def get_summarize_single(req: SummarySingleRequest):
+    return {"summary": note_service.generate_single_summary(req.text)}
+
+@router.get("/semantic-search")
+def get_semantic_search_notes(
+    query: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return note_service.semantic_search_notes(db, current_user.id, query)

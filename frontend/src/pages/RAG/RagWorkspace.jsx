@@ -127,6 +127,30 @@ export default function RagWorkspace() {
               )}
             </div>
 
+            {/* Clickable Suggestion Chips */}
+            <div className="space-y-2 pt-2">
+              <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest block select-none">
+                💡 Tap a prompt to search your books:
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "What are my key learnings on resilience?",
+                  "Summarize my thoughts on habits.",
+                  "Compare stoicism and behavior loops.",
+                  "Explain active recall concepts in my library."
+                ].map((promptText) => (
+                  <button
+                    key={promptText}
+                    type="button"
+                    onClick={() => setQuery(promptText)}
+                    className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-indigo-500/10 border border-white/5 hover:border-indigo-500/20 text-[10px] font-semibold text-slate-300 hover:text-white transition-all cursor-pointer select-none"
+                  >
+                    {promptText}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Input Bar */}
             <form onSubmit={handleQuerySubmit} className="flex gap-3 relative">
               <input
@@ -148,40 +172,33 @@ export default function RagWorkspace() {
           </div>
 
           {/* RAG Advantage Explainer */}
-          <div className="space-y-6 lg:h-[calc(100vh-170px)] overflow-y-auto pr-2">
+          <div className="space-y-6 lg:h-[calc(100vh-170px)] overflow-y-auto pr-2 select-none font-sans">
             <h3 className="text-base font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-teal-400" /> Personal RAG Engine
+              <Sparkles className="w-5 h-5 text-teal-400" /> Chat With Your Books 🏛️
             </h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Unlike generic chatbots, your RAG model operates on a **personalized vector space** built directly from your actual reflections and catalog database.
+              Bookophilic uses smart search to search across your library shelf, note logs, and study reflections to answer questions using your exact readings!
             </p>
 
             <div className="space-y-4">
               <div className="glass-panel rounded-2xl p-4 border border-white/5 space-y-1">
-                <span className="text-xs font-bold text-teal-400 block">1. Ask My Library</span>
+                <span className="text-xs font-bold text-teal-400 block">📥 1. Shelf Your Readings</span>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Query ideas across multiple texts at once. Try: *"What have I learned about behavior change?"*
+                  Add textbooks, manuals, or standard books to your library bookshelf.
                 </p>
               </div>
 
               <div className="glass-panel rounded-2xl p-4 border border-white/5 space-y-1">
-                <span className="text-xs font-bold text-primary-400 block">2. Theme Exploration</span>
+                <span className="text-xs font-bold text-primary-400 block">✍️ 2. Log Annotations & Notes</span>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Find notes across different categories. Try: *"Show me all my highlights related to identity."*
+                  Any note, highlight, or summary you write is instantly remembered and indexed.
                 </p>
               </div>
 
               <div className="glass-panel rounded-2xl p-4 border border-white/5 space-y-1">
-                <span className="text-xs font-bold text-pink-400 block">3. AI Reading Mentor</span>
+                <span className="text-xs font-bold text-pink-400 block">💬 3. Ask Anything</span>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Find patterns in study goals. Try: *"Compare Stoicism concepts from different philosophy texts."*
-                </p>
-              </div>
-
-              <div className="glass-panel rounded-2xl p-4 border border-white/5 space-y-1">
-                <span className="text-xs font-bold text-amber-400 block">4. Spaced Revision Check</span>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Locate concepts that haven't been revised. Try: *"Which revision cards have I struggled with?"*
+                  Type questions in simple English. The AI combines all your study notes to give a complete personal response!
                 </p>
               </div>
             </div>

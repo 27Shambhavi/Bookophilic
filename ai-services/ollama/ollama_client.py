@@ -209,6 +209,12 @@ class OllamaClient:
             return json.dumps(res)
             
         # 4. Summarization/Reflections Fallback
+        elif "quiz" in prompt.lower() or "mcq" in prompt.lower():
+            return "Active Recall Quiz:\n1. Question: What is the main utility of active recall compared to passive reading?\n  A. It takes less time\n  B. It strengthens neural connections and improves retention\n  C. It requires less effort\n  D. It replaces regular sleep\n  *Correct Answer: B*\n\n2. Question: Which strategy best aids memory consolidation based on the concepts studied?\n  A. Highlighting the entire page\n  B. Re-reading pages repeatedly\n  C. Formulating testing questions and spaced self-testing\n  D. Skimming through summaries\n  *Correct Answer: C*"
+            
+        elif "action" in prompt.lower() or "task" in prompt.lower() or "point" in prompt.lower():
+            return "Actionable Takeaways & Tasks:\n• Implement a daily 15-minute active recall review session before studying new material.\n• Translate your passive notes into active testing cards immediately after reading.\n• Establish a dedicated trigger cue and reward to build a consistent study schedule."
+
         elif "summarize" in prompt.lower() or "summary" in prompt.lower() or "reflection" in prompt.lower():
             return "Bullet Point Summary:\n• Explored the core concepts and mapped critical findings.\n• Highlighted primary arguments regarding active recall and deliberate practice.\n• Outlined practical applications for accelerating cognitive retention."
             
@@ -223,7 +229,25 @@ class OllamaClient:
             total_pages = pages_match.group(1) if pages_match else "120"
             total_notes = notes_match.group(1) if notes_match else "5"
             
-            return f"Welcome to your positive reflection corner! Your reading journey is thriving with {total_sessions} sessions completed and {total_notes} study notes. You are actively building an excellent path to self-improvement.\n\n**Daily Affirmation:** 'I am cultivating deep focus, absorbing valuable insights, and growing wiser with every page I read. My mind is open, receptive, and expanding.'\n\n'He who has a why to live can bear almost any how.' — Friedrich Nietzsche"
+            mentor = "Socrates"
+            for m_name in ["Socrates", "Marcus Aurelius", "Steve Jobs", "Albert Einstein", "Seneca", "Friedrich Nietzsche", "Rumi", "Epictetus"]:
+                if m_name.lower() in prompt.lower():
+                    mentor = m_name
+                    break
+                    
+            quotes = {
+                "Marcus Aurelius": ("You have power over your mind - not outside events. Realize this, and you will find strength.", "I accept the universe's flow and focus only on what is within my control. Today, I build inner strength and act with virtue."),
+                "Socrates": ("The only true wisdom is in knowing you know nothing.", "I remain open, curious, and humble. By questioning and seeking truth, I deepen my understanding."),
+                "Albert Einstein": ("The important thing is not to stop questioning. Curiosity has its own reason for existing.", "My mind is a vessel for endless curiosity. I embrace challenges as opportunities to learn."),
+                "Steve Jobs": ("Your time is limited, so don't waste it living someone else's life.", "I trust my intuition and follow my heart. I focus on creating high-quality work."),
+                "Seneca": ("We suffer more often in imagination than in reality.", "I guard my thoughts against imagined worries. I anchor myself in the present moment."),
+                "Friedrich Nietzsche": ("He who has a why to live can bear almost any how.", "I embrace all of life's experiences to cultivate my strength and construct a meaningful destiny."),
+                "Rumi": ("Yesterday I was clever, so I wanted to change the world. Today I am wise, so I am changing myself.", "I turn my focus inward. By cultivating peace, I radiate light to the world around me."),
+                "Epictetus": ("It's not what happens to you, but how you react to it that matters.", "I separate external events from my internal choices. I master my judgements to maintain absolute tranquility.")
+            }
+            quote, aff = quotes.get(mentor, ("The journey of learning is a continuous ascent towards wisdom.", "I am aligned with the pursuit of clarity, focus, and deliberate learning today."))
+            
+            return f"Greetings, searcher of knowledge. I reflect upon your reading progress ({total_sessions} sessions completed, {total_pages} pages digested, {total_notes} annotations written) in the spirit of active growth.\n\n**Affirmation:** '{aff}'\n\n**Daily Wisdom:** '{quote}'\n— {mentor}"
             
         # 6. Personal RAG Search Fallback
         elif "rag" in prompt.lower() or "context retrieved" in prompt.lower() or "user question" in prompt.lower():

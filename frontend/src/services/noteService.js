@@ -60,6 +60,41 @@ const noteService = {
     );
     return response.data; // returns { reflections: "..." }
   },
+  
+  async getActionPoints(text) {
+    const response = await axios.post(
+      `${API_URL}/notes/action-points`,
+      { text },
+      { headers: authService.getAuthHeaders() }
+    );
+    return response.data; // returns { action_points: "..." }
+  },
+
+  async getQuiz(text) {
+    const response = await axios.post(
+      `${API_URL}/notes/quiz`,
+      { text },
+      { headers: authService.getAuthHeaders() }
+    );
+    return response.data; // returns { quiz: "..." }
+  },
+
+  async getSingleSummary(text) {
+    const response = await axios.post(
+      `${API_URL}/notes/summarize-single`,
+      { text },
+      { headers: authService.getAuthHeaders() }
+    );
+    return response.data; // returns { summary: "..." }
+  },
+
+  async semanticSearch(query) {
+    const response = await axios.get(`${API_URL}/notes/semantic-search`, {
+      params: { query },
+      headers: authService.getAuthHeaders(),
+    });
+    return response.data; // returns list of matching notes sorted by score
+  },
 };
 
 export default noteService;
