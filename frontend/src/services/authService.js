@@ -10,6 +10,9 @@ const authService = {
       password,
       full_name: fullName,
     });
+    if (response.data && response.data.access_token) {
+      localStorage.setItem('token', response.data.access_token);
+    }
     return response.data;
   },
 

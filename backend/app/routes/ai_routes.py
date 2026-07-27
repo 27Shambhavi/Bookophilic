@@ -107,8 +107,11 @@ def get_reading_sessions(
         for s in sessions
     ]
 
+from typing import Optional
+
 class RagQueryRequest(BaseModel):
     query: str
+    book_id: Optional[int] = None
 
 @router.post("/rag")
 def query_rag(
@@ -118,7 +121,7 @@ def query_rag(
 ):
     if not req.query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty")
-    return rag_service.query_library(db, current_user.id, req.query)
+    return rag_service.query_library(db, current_user.id, req.query, req.book_id)
 
 @router.post("/book/{book_id}/upload-pdf")
 async def upload_pdf(

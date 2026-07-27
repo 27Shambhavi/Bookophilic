@@ -41,9 +41,10 @@ export default function Register() {
     setLoading(true);
     setError('');
     try {
-      await authService.register(email, password, fullName);
-      // Automatically login user
-      await authService.login(email, password);
+      const data = await authService.register(email, password, fullName);
+      if (!data || !data.access_token) {
+        await authService.login(email, password);
+      }
       navigate('/');
     } catch (err) {
       console.error(err);

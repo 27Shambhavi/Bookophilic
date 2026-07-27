@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 from app.database.connection import get_db
 from app.schemas.user_schema import (
     UserCreate, UserResponse, Token, UserPreferenceUpdate, UserPreferenceResponse,
-    ForgotPasswordRequest, VerifyOTPRequest, ResetPasswordRequest, ChangePasswordRequest
+    ForgotPasswordRequest, VerifyOTPRequest, ResetPasswordRequest, ChangePasswordRequest,
+    RegisterResponse
 )
 from app.models.user_model import User, UserPreference
 from app.services.auth_service import AuthService
@@ -16,7 +17,7 @@ from app.services.email_service import EmailService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
     # Check if user already exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
@@ -48,7 +49,15 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
     
-    return db_user
+    access_token = AuthService.create_access_token(data={"sub": db_user.email})
+    return {
+        "id": db_user.id,
+        "email": db_user.email,
+        "full_name": db_user.full_name,
+        "created_at": db_user.created_at,
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
 
 @router.post("/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):

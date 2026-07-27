@@ -38,6 +38,11 @@ class Book(Base):
     reading_sessions = relationship("ReadingTracker", back_populates="book", cascade="all, delete-orphan")
     recommendations = relationship("Recommendation", back_populates="book", cascade="all, delete-orphan")
     comments = relationship("BookComment", back_populates="book", cascade="all, delete-orphan")
+    pdf_chunks = relationship("PDFChunk", back_populates="book", cascade="all, delete-orphan")
+
+    @property
+    def has_pdf(self) -> bool:
+        return len(self.pdf_chunks) > 0
 
 class Quote(Base):
     __tablename__ = "quotes"
@@ -61,4 +66,19 @@ class BookComment(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     book = relationship("Book", back_populates="comments")
+    user = relationship("User")
+
+class PDFChunk(Base):
+    __tablename__ = "pdf_chunks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    book_id = Column(Integer, ForeignKey("books.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    chunk_index = Column(Integer, nullable=False)
+    content = Column(Text, nullable=False)
+    page_number = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    book = relationship("Book", back_populates="pdf_chunks")
     user = relationship("User")

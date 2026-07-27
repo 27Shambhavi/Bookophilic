@@ -5,7 +5,7 @@ from app.database.db import Base
 
 # Import all models to ensure they are registered with Base.metadata before create_all
 from app.models.user_model import User, UserPreference
-from app.models.book_model import Book, Genre, Quote, BookComment
+from app.models.book_model import Book, Genre, Quote, BookComment, PDFChunk
 from app.models.note_model import Note
 from app.models.flashcard_model import Flashcard, RevisionSchedule
 from app.models.reading_tracker_model import ReadingTracker, Recommendation, EmbeddingMetadata

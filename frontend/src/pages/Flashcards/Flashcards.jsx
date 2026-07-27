@@ -19,13 +19,23 @@ export default function Flashcards() {
   const [seeding, setSeeding] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [seedCount, setSeedCount] = useState(3);
+  const [stats, setStats] = useState({
+    total_cards: 0,
+    due_cards: 0,
+    reviewed_today: 0,
+    total_reviewed: 0
+  });
 
   const loadFlashcards = async () => {
     try {
-      const allData = await aiService.getFlashcards();
-      const dueData = await aiService.getDueFlashcards();
+      const [allData, dueData, statsData] = await Promise.all([
+        aiService.getFlashcards(),
+        aiService.getDueFlashcards(),
+        aiService.getFlashcardStats()
+      ]);
       setAllCards(allData);
       setDueCards(dueData);
+      setStats(statsData);
       
       if (isPracticeMode) {
         setCardsToReview(allData);
@@ -53,12 +63,24 @@ export default function Flashcards() {
       // Submit SM-2 rating review to backend
       await aiService.submitReview(cardId, rating);
       
+      // Instantly update stats locally
+      setStats(prev => ({
+        ...prev,
+        reviewed_today: prev.reviewed_today + 1,
+        total_reviewed: prev.total_reviewed + (rating >= 3 ? 1 : 0),
+        due_cards: Math.max(0, prev.due_cards - 1)
+      }));
+      
       if (currentIndex + 1 >= cardsToReview.length) {
         // Reload all data when finishing the session
-        const allData = await aiService.getFlashcards();
-        const dueData = await aiService.getDueFlashcards();
+        const [allData, dueData, statsData] = await Promise.all([
+          aiService.getFlashcards(),
+          aiService.getDueFlashcards(),
+          aiService.getFlashcardStats()
+        ]);
         setAllCards(allData);
         setDueCards(dueData);
+        setStats(statsData);
       }
       
       // Advance to next card in the array
@@ -286,22 +308,32 @@ export default function Flashcards() {
           </div>
           
           {/* Active stats bar */}
-          {!loading && !seeding && cardsToReview && cardsToReview.length > 0 && (
-            <div className="glass-panel rounded-2xl p-4 border border-white/5 flex justify-around text-center max-w-lg mx-auto w-full text-sm">
+          {!loading && !seeding && (
+            <div className="glass-panel rounded-2xl p-4 border border-white/5 flex justify-around text-center max-w-2xl mx-auto w-full text-sm shadow-glass-glow animate-fadeIn">
               <div>
-                <span className="text-slate-500 text-xs font-semibold uppercase block">Total Cards</span>
-                <span className="text-white font-extrabold text-lg">{cardsToReview.length}</span>
+                <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider block">Total Library Cards</span>
+                <span className="text-white font-extrabold text-sm">{stats.total_cards}</span>
               </div>
               <div className="border-l border-white/5"></div>
               <div>
-                <span className="text-slate-500 text-xs font-semibold uppercase block">Reviewed</span>
-                <span className="text-white font-extrabold text-lg">{currentIndex}</span>
+                <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider block">Due for Review</span>
+                <span className="text-primary-400 font-extrabold text-sm">{stats.due_cards}</span>
               </div>
               <div className="border-l border-white/5"></div>
               <div>
-                <span className="text-slate-500 text-xs font-semibold uppercase block">Mode</span>
+                <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider block">Reviewed Today</span>
+                <span className="text-emerald-400 font-extrabold text-sm">{stats.reviewed_today}</span>
+              </div>
+              <div className="border-l border-white/5"></div>
+              <div>
+                <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider block">Total Reviews</span>
+                <span className="text-teal-400 font-extrabold text-sm">{stats.total_reviewed}</span>
+              </div>
+              <div className="border-l border-white/5"></div>
+              <div>
+                <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider block">Mode</span>
                 <span className="text-pink-400 font-extrabold text-xs flex items-center gap-1 justify-center mt-1">
-                  <Sparkles className="w-3.5 h-3.5 text-pink-500 animate-spin" style={{ animationDuration: '3s' }} /> {isPracticeMode ? "Free Practice" : "SuperMemo SM-2"}
+                  <Sparkles className="w-3.5 h-3.5 text-pink-500 animate-spin" style={{ animationDuration: '3s' }} /> {isPracticeMode ? "Practice" : "SM-2"}
                 </span>
               </div>
             </div>

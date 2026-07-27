@@ -67,3 +67,22 @@ def review_flashcard(
     if not schedule:
         raise HTTPException(status_code=404, detail="Flashcard revision schedule not found")
     return {"message": "Review recorded successfully", "next_review": schedule.next_review, "interval_days": schedule.interval_days}
+
+class GenerateFromPdfRequest(BaseModel):
+    book_id: int
+    count: int = 5
+
+@router.get("/stats")
+def get_flashcard_stats(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return flashcard_service.get_user_stats(db, current_user.id)
+
+@router.post("/generate-from-pdf", response_model=List[FlashcardResponse])
+def generate_flashcards_from_pdf(
+    req: GenerateFromPdfRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return flashcard_service.generate_flashcards_from_pdf_chunks(db, req.book_id, current_user.id, req.count)

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft, BookOpen, FileText, Brain, Edit2, Play, Square, Sparkles, 
-  Plus, Loader2, Save, Trash2, HelpCircle, Mic, Volume2, Image, MessageSquare, Users, Pause, X, Trophy
+  Plus, Loader2, Save, Trash2, HelpCircle, Mic, Volume2, Image, MessageSquare, Users, Pause, X, Trophy, ArrowRight
 } from 'lucide-react';
 import Navbar from '../../components/Navbar/Navbar';
 import Sidebar from '../../components/Sidebar/Sidebar';
@@ -72,15 +72,23 @@ export default function BookDetails() {
   const [noteCategory, setNoteCategory] = useState('Learnings');
   
   // AI triggers states
-  const [aiSummary, setAiSummary] = useState('');
   const [summaryLoading, setSummaryLoading] = useState(false);
   
   const [aiReflections, setAiReflections] = useState('');
   const [reflectionsLoading, setReflectionsLoading] = useState(false);
   
   const [generateText, setGenerateText] = useState('');
-  const [cardsLoading, setCardsLoading] = useState(false);
-  const [flashcardCount, setFlashcardCount] = useState(4);
+  // PDF states
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [aiSummary, setAiSummary] = useState('');
+
+  // Book QA & Debate Chat states
+  const [bookChatInput, setBookChatInput] = useState('');
+  const [bookChatHistory, setBookChatHistory] = useState([
+    { role: 'assistant', content: "Welcome to the Book Debate Room! You can ask specific questions about pages in this book, or debate any concepts you disagree with. I will verify references from your uploaded PDF text and notes!" }
+  ]);
+  const [bookChatLoading, setBookChatLoading] = useState(false);
+  const [pdfGeneratingCards, setPdfGeneratingCards] = useState(false);
 
   // Reading Tracker state
   const [activeSession, setActiveSession] = useState(null);
@@ -313,6 +321,7 @@ export default function BookDetails() {
       const res = await aiService.uploadBookPdf(bookId, file);
       // Set PDF summary
       setAiSummary(res.summary);
+      setBook(prev => prev ? { ...prev, has_pdf: true } : null);
       // Reload book notes to show new PDF summary note
       const updatedNotes = await noteService.getBookNotes(bookId);
       setNotes(updatedNotes);
@@ -322,6 +331,40 @@ export default function BookDetails() {
       alert("Failed to process PDF. Make sure it's under 5MB.");
     } finally {
       setPdfLoading(false);
+    }
+  };
+
+  const handleBookChatSubmit = async (e) => {
+    e.preventDefault();
+    if (!bookChatInput.trim()) return;
+
+    const userMsg = bookChatInput.trim();
+    setBookChatHistory(prev => [...prev, { role: 'user', content: userMsg }]);
+    setBookChatInput('');
+    setBookChatLoading(true);
+
+    try {
+      const res = await aiService.queryRag(userMsg, bookId);
+      setBookChatHistory(prev => [...prev, { role: 'assistant', content: res.answer }]);
+    } catch (err) {
+      console.error("Book chat failed", err);
+      setBookChatHistory(prev => [...prev, { role: 'assistant', content: "Sorry, I could not query this book's index. Make sure the backend is active." }]);
+    } finally {
+      setBookChatLoading(false);
+    }
+  };
+
+  const handleGenerateFromPdf = async () => {
+    setPdfGeneratingCards(true);
+    try {
+      const cards = await aiService.generateFlashcardsFromPdf(bookId, flashcardCount);
+      setFlashcards(prev => [...cards, ...prev]);
+      alert(`Successfully generated ${cards.length} flashcards from this book's PDF chunks!`);
+    } catch (err) {
+      console.error("PDF flashcard generation failed", err);
+      alert("Failed to generate cards from PDF. Ensure PDF is uploaded first.");
+    } finally {
+      setPdfGeneratingCards(false);
     }
   };
 
@@ -984,6 +1027,58 @@ export default function BookDetails() {
                 )}
               </div>
 
+              {/* Book QA & Debate Chat Room */}
+              {book && (
+                <div className="glass-panel rounded-2xl p-5 border border-white/5 space-y-4 bg-gradient-to-br from-slate-900/60 to-primary-950/20">
+                  <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                    <MessageSquare className="w-4.5 h-4.5 text-primary-400" />
+                    <h4 className="font-bold text-slate-200 text-xs uppercase tracking-wider">
+                      Book QA & Debate Room
+                    </h4>
+                  </div>
+                  
+                  {/* Chat logs */}
+                  <div className="h-48 overflow-y-auto bg-slate-950/50 border border-white/5 rounded-xl p-3 space-y-3 text-xs scrollbar-thin scrollbar-thumb-white/5">
+                    {bookChatHistory.map((msg, i) => (
+                      <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} space-y-1`}>
+                        <span className={`text-[9px] font-bold uppercase tracking-wider ${msg.role === 'user' ? 'text-primary-400' : 'text-teal-400'}`}>
+                          {msg.role === 'user' ? 'You' : 'Assistant'}
+                        </span>
+                        <div className={`max-w-[90%] rounded-xl px-3 py-2 text-slate-200 leading-relaxed ${
+                          msg.role === 'user' ? 'bg-primary-500/20 border border-primary-500/35' : 'bg-white/5 border border-white/5'
+                        }`}>
+                          {msg.content}
+                        </div>
+                      </div>
+                    ))}
+                    {bookChatLoading && (
+                      <div className="text-[10px] text-slate-500 animate-pulse flex items-center gap-1.5 pt-1 font-semibold">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-primary-500" /> Embedding query & debating page content...
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Input form */}
+                  <form onSubmit={handleBookChatSubmit} className="flex gap-2">
+                    <input
+                      type="text"
+                      disabled={bookChatLoading}
+                      className="flex-1 bg-slate-900 border border-white/5 focus:border-primary-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition-all"
+                      placeholder={book?.has_pdf ? "Ask or debate about this book..." : "Upload a PDF first to chat!"}
+                      value={bookChatInput}
+                      onChange={(e) => setBookChatInput(e.target.value)}
+                    />
+                    <button
+                      type="submit"
+                      disabled={bookChatLoading || !bookChatInput.trim() || !book?.has_pdf}
+                      className="px-3 py-2.5 rounded-xl bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white font-bold text-xs flex items-center justify-center transition-all cursor-pointer"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </form>
+                </div>
+              )}
+
               {/* AI Audiobook Player */}
               <div className="glass-panel rounded-2xl p-5 border border-white/5 space-y-4 bg-gradient-to-br from-slate-900/60 to-primary-950/20">
                 <div className="flex items-center gap-2 pb-2 border-b border-white/5">
@@ -1121,6 +1216,25 @@ export default function BookDetails() {
                           )}
                         </button>
                       </div>
+
+                      {book?.has_pdf && (
+                        <button
+                          type="button"
+                          onClick={handleGenerateFromPdf}
+                          disabled={pdfGeneratingCards}
+                          className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-glass-glow transition-all cursor-pointer mt-2"
+                        >
+                          {pdfGeneratingCards ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Scanning Vector DB Chunks...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3.5 h-3.5" /> Auto-Generate from PDF
+                            </>
+                          )}
+                        </button>
+                      )}
                     </form>
                   </>
                 )}

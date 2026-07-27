@@ -150,18 +150,19 @@ export default function Dashboard() {
 
     const loadDashboardData = async () => {
       try {
-        const user = await authService.getMe();
+        const [user, genresList, booksList, notesList, dueCards] = await Promise.all([
+          authService.getMe(),
+          bookService.getGenres(),
+          bookService.getBooks(),
+          noteService.getNotes(),
+          aiService.getDueFlashcards()
+        ]);
+        
         setCurrentUser(user);
-        
-        const genresList = await bookService.getGenres();
         setDbGenres(genresList);
-
-        const booksList = await bookService.getBooks();
         setBooks(booksList);
-        const completedBooks = booksList.filter(b => b.status === 'completed');
-        const notesList = await noteService.getNotes();
-        const dueCards = await aiService.getDueFlashcards();
         
+        const completedBooks = booksList.filter(b => b.status === 'completed');
         setStats({
           booksCount: booksList.length,
           completedCount: completedBooks.length,

@@ -92,3 +92,11 @@ class ChangePasswordRequest(BaseModel):
     @classmethod
     def check_new_password_strength(cls, v):
         return validate_password_strength(v)
+
+class RegisterResponse(BaseModel):
+    id: int
+    email: str
+    full_name: Optional[str] = None
+    created_at: datetime
+    access_token: str
+    token_type: str

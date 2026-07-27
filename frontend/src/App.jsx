@@ -77,7 +77,7 @@ export default function App() {
 
     const timer = setTimeout(() => {
       setShowSplash(false);
-    }, 3200); // Unmount splash screen after 3.2s
+    }, 1000); // Unmount splash screen after 1.0s
     return () => clearTimeout(timer);
   }, []);
 

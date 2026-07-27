@@ -117,10 +117,14 @@ const aiService = {
   },
 
   // Personal RAG & PDF upload
-  async queryRag(query) {
+  async queryRag(query, bookId = null) {
+    const payload = { query };
+    if (bookId) {
+      payload.book_id = bookId;
+    }
     const response = await axios.post(
       `${API_URL}/ai/rag`,
-      { query },
+      payload,
       { headers: authService.getAuthHeaders() }
     );
     return response.data;
@@ -138,6 +142,24 @@ const aiService = {
           'Content-Type': 'multipart/form-data'
         }
       }
+    );
+    return response.data;
+  },
+
+  // Spaced repetition stats and chunk card generation
+  async getFlashcardStats() {
+    const response = await axios.get(
+      `${API_URL}/flashcards/stats`,
+      { headers: authService.getAuthHeaders() }
+    );
+    return response.data;
+  },
+
+  async generateFlashcardsFromPdf(bookId, count = 5) {
+    const response = await axios.post(
+      `${API_URL}/flashcards/generate-from-pdf`,
+      { book_id: bookId, count },
+      { headers: authService.getAuthHeaders() }
     );
     return response.data;
   },

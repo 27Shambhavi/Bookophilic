@@ -104,3 +104,47 @@ class FlashcardService:
         db.commit()
         db.refresh(schedule)
         return schedule
+
+    def get_user_stats(self, db: Session, user_id: int):
+        total_cards = db.query(Flashcard).filter(Flashcard.user_id == user_id).count()
+        
+        now = datetime.utcnow()
+        due_cards = db.query(Flashcard).join(RevisionSchedule).filter(
+            Flashcard.user_id == user_id,
+            RevisionSchedule.next_review <= now
+        ).count()
+        
+        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        reviewed_today = db.query(RevisionSchedule).filter(
+            RevisionSchedule.user_id == user_id,
+            RevisionSchedule.last_reviewed >= today_start
+        ).count()
+        
+        total_reviewed = db.query(RevisionSchedule).filter(
+            RevisionSchedule.user_id == user_id,
+            RevisionSchedule.repetitions > 0
+        ).count()
+        
+        return {
+            "total_cards": total_cards,
+            "due_cards": due_cards,
+            "reviewed_today": reviewed_today,
+            "total_reviewed": total_reviewed
+        }
+
+    def generate_flashcards_from_pdf_chunks(self, db: Session, book_id: int, user_id: int, count: int = 5):
+        from app.models.book_model import PDFChunk
+        
+        chunks = db.query(PDFChunk).filter(PDFChunk.book_id == book_id, PDFChunk.user_id == user_id).all()
+        if not chunks:
+            book = db.query(Book).filter(Book.id == book_id, Book.user_id == user_id).first()
+            description = book.description if book else "A study book context."
+            return self.generate_ai_flashcards(db, book_id, user_id, description, count)
+            
+        import random
+        sample_size = min(len(chunks), max(3, count))
+        selected_chunks = random.sample(chunks, sample_size)
+        selected_chunks.sort(key=lambda x: x.chunk_index)
+        
+        combined_text = "\n\n".join([c.content for c in selected_chunks])
+        return self.generate_ai_flashcards(db, book_id, user_id, combined_text, count)

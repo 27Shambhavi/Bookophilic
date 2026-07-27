@@ -63,6 +63,7 @@ class BookResponse(BookBase):
     user_id: int
     created_at: datetime
     genre: Optional[GenreResponse] = None
+    has_pdf: Optional[bool] = False
 
     class Config:
         from_attributes = True
