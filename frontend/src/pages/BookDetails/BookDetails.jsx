@@ -121,7 +121,6 @@ export default function BookDetails() {
   // Community discussions state
   const [communityText, setCommunityText] = useState('');
   const [communityComments, setCommunityComments] = useState([]);
-  const [pdfLoading, setPdfLoading] = useState(false);
 
   // Audio player SpeechSynthesis Speech functions
   const handlePlayAudio = () => {
